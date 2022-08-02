@@ -78,7 +78,7 @@ class AdvancedRequest:
         """
         for header_data in tc_adv_req_headers:
             value: str = self.tcex.playbook.read(header_data.get('value'))
-            self.headers[str(header_data.get('key'))] = str(value)
+            self.headers[str(header_data.get('key'))] = value
 
     @ReadArg('tc_adv_req_params', array=True, embedded=False)
     def configure_params(self, tc_adv_req_params: List[Dict[str, str]]):

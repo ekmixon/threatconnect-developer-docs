@@ -15,7 +15,7 @@ class TestLogs:
             tcex_proxy (TcEx, fixture): An instantiated instance of TcEx object.
         """
         tcex = tcex_proxy
-        for _ in range(0, 20):
+        for _ in range(20):
             tcex.log.trace('TRACE LOGGING')
             tcex.log.debug('DEBUG LOGGING')
             tcex.log.info('INFO LOGGING')
@@ -41,7 +41,7 @@ class TestLogs:
         config_data = {'tc_log_file': 'rotate.log', 'tc_log_max_bytes': 1_048_576}
         tcex = playbook_app(config_data=config_data).tcex
 
-        for _ in range(0, 5_000):
+        for _ in range(5_000):
             tcex.log.info(f'A long random string {tcex.utils.random_string(randint(200, 250))}')
 
         # simple assert to ensure the log file was created

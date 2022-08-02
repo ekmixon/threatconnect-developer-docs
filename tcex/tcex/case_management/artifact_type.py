@@ -74,10 +74,10 @@ class ArtifactType(CommonCaseManagement):
     def __init__(self, tcex, **kwargs):
         """Initialize Class properties"""
         super().__init__(tcex, ApiEndpoints.ARTIFACT_TYPES, kwargs)
-        self._data_type = kwargs.get('data_type', None)
-        self._description = kwargs.get('description', None)
-        self._intel_type = kwargs.get('intel_type', None)
-        self._name = kwargs.get('name', None)
+        self._data_type = kwargs.get('data_type')
+        self._description = kwargs.get('description')
+        self._intel_type = kwargs.get('intel_type')
+        self._name = kwargs.get('name')
 
     @property
     def as_entity(self):

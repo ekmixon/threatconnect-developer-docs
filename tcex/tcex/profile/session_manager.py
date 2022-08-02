@@ -95,10 +95,7 @@ class SessionManager:
             parm_list = []
             params_keys = sorted(params.keys())
             for key in params_keys:
-                if key in blur:
-                    value = '***'
-                else:
-                    value = params.get(key)
+                value = '***' if key in blur else params.get(key)
                 parm_list.append((key, value))
 
             # The key for this request e.g. GET https://... ('foo':'bla')

@@ -44,21 +44,22 @@ class DataStore:
 
     def _create_index(self):
         """Create index if it doesn't exist."""
-        if not self.index_exists:
-            rid = 'temp-index-create'
-            index_settings = {}
-            headers = {'Content-Type': 'application/json', 'DB-Method': 'POST'}
-            url = f'/v2/exchange/db/{self.domain}/{self.data_type}/{rid}'
-            r: Response = self.tcex.session.post(url, json=index_settings, headers=headers)
+        if self.index_exists:
+            return
+        rid = 'temp-index-create'
+        index_settings = {}
+        headers = {'Content-Type': 'application/json', 'DB-Method': 'POST'}
+        url = f'/v2/exchange/db/{self.domain}/{self.data_type}/{rid}'
+        r: Response = self.tcex.session.post(url, json=index_settings, headers=headers)
 
-            if not r.ok:
-                error: str = r.text or r.reason
-                self.tcex.handle_error(800, [r.status_code, error])
-            self.tcex.log.debug(
-                f'creating index. status_code: {r.status_code}, response: "{r.text}".'
-            )
-            # delete temporary record
-            self.delete(rid, False)
+        if not r.ok:
+            error: str = r.text or r.reason
+            self.tcex.handle_error(800, [r.status_code, error])
+        self.tcex.log.debug(
+            f'creating index. status_code: {r.status_code}, response: "{r.text}".'
+        )
+        # delete temporary record
+        self.delete(rid, False)
 
     def _token_available(self):
         """Raise an error if token is not available.

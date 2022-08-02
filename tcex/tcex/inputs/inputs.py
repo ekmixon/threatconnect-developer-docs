@@ -366,9 +366,8 @@ class Inputs:
             # iterate over args and resolve any playbook variables
             for arg in vars(self._default_args):
                 arg_val = getattr(self._default_args, arg)
-                if arg not in self.tc_reserved_args:
-                    if isinstance(arg_val, (str)):
-                        arg_val = self.tcex.playbook.read(arg_val)
+                if arg not in self.tc_reserved_args and isinstance(arg_val, (str)):
+                    arg_val = self.tcex.playbook.read(arg_val)
                 setattr(self._default_args_resolved, arg, arg_val)
 
             # set parsed bool to ensure args are only parsed once

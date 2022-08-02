@@ -39,7 +39,7 @@ class App(PlaybookApp):
 
         # convert string input to dict
         try:
-            if json_data_type in ['String']:
+            if json_data_type in {'String'}:
                 json_data: dict = json.loads(json_data)
         except ValueError:
             self.tcex.exit(1, 'Failed parsing JSON data.')

@@ -149,9 +149,7 @@ class DatetimeUtils:
                 if dt.tzinfo is None:
                     dt = self._replace_timezone(dt)
                 dt = dt.astimezone(pytz.timezone(tz))
-        except IndexError:  # pragma: no cover
-            pass
-        except TypeError:  # pragma: no cover
+        except (IndexError, TypeError):  # pragma: no cover
             pass
         except ValueError:
             pass
@@ -313,13 +311,13 @@ class DatetimeUtils:
             (datetime.datetime): Python datetime.datetime object.
         """
         dt = None
-        if re.compile(r'^[0-9]{11,16}$').findall(str(time_input)):
+        if re.compile(r'^[0-9]{11,16}$').findall(time_input):
             # handle timestamp with milliseconds and no "."
-            time_input_length = len(str(time_input)) - 10
+            time_input_length = len(time_input) - 10
             dec = math.pow(10, time_input_length)
             time_input = float(time_input) / dec
 
-        if re.compile(r'^[0-9]{9,10}(?:\.[0-9]{0,7})?$').findall(str(time_input)):
+        if re.compile(r'^[0-9]{9,10}(?:\.[0-9]{0,7})?$').findall(time_input):
             dt = datetime.fromtimestamp(float(time_input), tz=pytz.timezone('UTC'))
             # don't covert timezone if dt timezone already in the correct timezone
             if tz is not None and tz != dt.tzname():

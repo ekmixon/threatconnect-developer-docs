@@ -30,9 +30,7 @@ class StixIndicator(StixModel):
     @staticmethod
     def _add_milliseconds(time):
         new_time = f'''{time.upper().replace('Z', '')}.000'''
-        if time.lower().endswith('z'):
-            return f'{new_time}Z'
-        return new_time
+        return f'{new_time}Z' if time.lower().endswith('z') else new_time
 
     # pylint: disable=arguments-differ
     def produce(self, tc_data: Union[list, dict], **kwargs):
@@ -190,15 +188,16 @@ class StixIndicator(StixModel):
                 }
             )
         else:
-            for i in file_indicators:
-                mappings.append(
-                    {
-                        'type': 'File',
-                        'summary': i.value,
-                        'confidence': '@.confidence',
-                        'xid': Batch.generate_xid(batch_xid_array + [i.value]),
-                    }
-                )
+            mappings.extend(
+                {
+                    'type': 'File',
+                    'summary': i.value,
+                    'confidence': '@.confidence',
+                    'xid': Batch.generate_xid(batch_xid_array + [i.value]),
+                }
+                for i in file_indicators
+            )
+
         return mappings
 
     @staticmethod
@@ -215,27 +214,31 @@ class StixIndicator(StixModel):
         for i in filter(lambda i: i.path in ['ipv4-addr:value', 'ipv6-addr:value'], indicators):
             parse_map = None
             if i.path == 'ipv4-addr:value':
-                if '/' in i.value and i.value.split('/')[1] != '32':  # this is a CIDR
-                    parse_map = {
+                parse_map = (
+                    {
                         'type': 'CIDR',
                         'summary': i.value,
                     }
-                else:  # this is an address
-                    parse_map = {
+                    if '/' in i.value and i.value.split('/')[1] != '32'
+                    else {
                         'type': 'Address',
                         'summary': i.value.split('/')[0],
                     }
+                )
+
             elif i.path == 'ipv6-addr:value':
-                if '/' in i.value and i.value.split('/')[1] != '128':  # this is a CIDR
-                    parse_map = {
+                parse_map = (
+                    {
                         'type': 'CIDR',
                         'summary': i.value,
                     }
-                else:  # this is an address
-                    parse_map = {
+                    if '/' in i.value and i.value.split('/')[1] != '128'
+                    else {
                         'type': 'Address',
                         'summary': i.value.split('/')[0],
                     }
+                )
+
             parse_map['confidence'] = '@.confidence'
             parse_map['xid'] = Batch.generate_xid(
                 batch_xid_array + [parse_map.get('type'), parse_map.get('summary')]
@@ -262,7 +265,7 @@ class StixIndicator(StixModel):
         }
 
         mappings = []
-        for i in filter(lambda i: i.path in type_map.keys(), indicators):
+        for i in filter(lambda i: i.path in type_map, indicators):
             indicator_type = type_map.get(i.path)
 
             mappings.append(

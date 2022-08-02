@@ -211,9 +211,6 @@ class Indicator:
             summary.append(val2)
         if val3 is not None:
             summary.append(val3)
-        if not summary:
-            # Indicator object has no logger to output warning
-            pass
         return ' : '.join(summary)
 
     @property
@@ -224,17 +221,17 @@ class Indicator:
     @confidence.setter
     def confidence(self, confidence: int):
         """Set Indicator confidence."""
-        self._indicator_data['confidence'] = int(confidence)
+        self._indicator_data['confidence'] = confidence
 
     @property
     def data(self) -> dict:
         """Return Indicator data."""
         # add attributes
         if self._attributes:
-            self._indicator_data['attribute'] = []
-            for attr in self._attributes:
-                if attr.valid:
-                    self._indicator_data['attribute'].append(attr.data)
+            self._indicator_data['attribute'] = [
+                attr.data for attr in self._attributes if attr.valid
+            ]
+
         # add file actions
         if self._file_actions:
             self._indicator_data.setdefault('fileAction', {})
@@ -248,15 +245,10 @@ class Indicator:
                 self._indicator_data['fileOccurrence'].append(occurrence.data)
         # add security labels
         if self._labels:
-            self._indicator_data['securityLabel'] = []
-            for label in self._labels:
-                self._indicator_data['securityLabel'].append(label.data)
+            self._indicator_data['securityLabel'] = [label.data for label in self._labels]
         # add tags
         if self._tags:
-            self._indicator_data['tag'] = []
-            for tag in self._tags:
-                if tag.valid:
-                    self._indicator_data['tag'].append(tag.data)
+            self._indicator_data['tag'] = [tag.data for tag in self._tags if tag.valid]
         return self._indicator_data
 
     @property
@@ -325,7 +317,7 @@ class Indicator:
     @rating.setter
     def rating(self, rating: float):
         """Set Indicator rating."""
-        self._indicator_data['rating'] = float(rating)
+        self._indicator_data['rating'] = rating
 
     @property
     def summary(self) -> str:

@@ -54,9 +54,7 @@ class SecurityLabel(Mappings):
         Returns:
 
         """
-        if self._data.get('name'):
-            return True
-        return False
+        return bool(self._data.get('name'))
 
     def add_key_value(self, key, value):
         """Converts the value and adds it as a data field.

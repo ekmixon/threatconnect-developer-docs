@@ -191,15 +191,15 @@ class Indicator(Mappings):
         request_data = {}
         if status:
             status = str(status)
-            if status.lower() in ['active', '1']:
+            if status.lower() in {'active', '1'}:
                 request_data['active'] = 1
-            elif status.lower() in ['inactive', '0']:
+            elif status.lower() in {'inactive', '0'}:
                 request_data['active'] = 0
         if cal_status:
             cal_status = str(cal_status)
-            if cal_status.lower() in ['locked', 'lock', '1']:
+            if cal_status.lower() in {'locked', 'lock', '1'}:
                 request_data['activeLocked'] = 1
-            elif cal_status.lower() in ['unlock', 'unlocked', '0']:
+            elif cal_status.lower() in {'unlock', 'unlocked', '0'}:
                 request_data['activeLocked'] = 0
         return self.tc_requests.update(
             self.api_type, self.api_branch, self.unique_id, request_data, owner=self.owner
@@ -333,9 +333,7 @@ class Indicator(Mappings):
             summary.append(val2)
         if val3 is not None:
             summary.append(val3)
-        if not summary:
-            return None
-        return ' : '.join(summary)
+        return ' : '.join(summary) if summary else None
 
     def __str__(self):
         """Return string representation of object"""

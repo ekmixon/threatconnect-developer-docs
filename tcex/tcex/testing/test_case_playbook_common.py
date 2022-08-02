@@ -47,8 +47,7 @@ class TestCasePlaybookCommon(TestCase):
 
     def clear_context(self, context):
         """Delete data in redis"""
-        keys = self.redis_client.hkeys(context)
-        if keys:
+        if keys := self.redis_client.hkeys(context):
             return self.redis_client.hdel(context, *keys)
         return 0
 

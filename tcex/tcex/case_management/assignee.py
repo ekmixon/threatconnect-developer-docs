@@ -16,12 +16,12 @@ class User:
     def __init__(self, **kwargs):
         """Initialize Class properties."""
         self._transform_kwargs(kwargs)
-        self._first_name = kwargs.get('first_name', None)
-        self._id = kwargs.get('id', None)
-        self._last_name = kwargs.get('last_name', None)
-        self._pseudonym = kwargs.get('pseudonym', None)
-        self._role = kwargs.get('role', None)
-        self._user_name = kwargs.get('user_name', None)
+        self._first_name = kwargs.get('first_name')
+        self._id = kwargs.get('id')
+        self._last_name = kwargs.get('last_name')
+        self._pseudonym = kwargs.get('pseudonym')
+        self._role = kwargs.get('role')
+        self._user_name = kwargs.get('user_name')
 
     def __str__(self):
         """Printable version of Object"""
@@ -68,10 +68,7 @@ class User:
                 continue
             as_dict[key] = value
 
-        if not as_dict:
-            return None
-
-        return as_dict
+        return as_dict or None
 
     @property
     def as_entity(self):
@@ -171,19 +168,13 @@ class Users:
     @property
     def as_dict(self):
         """Return a dict representation of the UsersData class."""
-        data = []
-        for user in self.users:
-            data.append(user.as_dict)
-
+        data = [user.as_dict for user in self.users]
         return {'data': data}
 
     @property
     def body(self):
         """Return a body representation of the Creator class."""
-        body = []
-        for user in self.users:
-            body.append(user.body)
-
+        body = [user.body for user in self.users]
         return {'data': body}
 
 

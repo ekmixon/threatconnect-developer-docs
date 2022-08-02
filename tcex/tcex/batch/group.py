@@ -105,10 +105,7 @@ class Group:
                 self._group_data[key] = self._utils.datetime.format_datetime(
                     value, date_format='%Y-%m-%dT%H:%M:%SZ'
                 )
-        elif key == 'file_content':
-            # file content arg is not part of Group JSON
-            pass
-        else:
+        elif key != 'file_content':
             self._group_data[key] = value
 
     def association(self, group_xid: str) -> None:
@@ -170,21 +167,16 @@ class Group:
         """Return Group data."""
         # add attributes
         if self._attributes:
-            self._group_data['attribute'] = []
-            for attr in self._attributes:
-                if attr.valid:
-                    self._group_data['attribute'].append(attr.data)
+            self._group_data['attribute'] = [
+                attr.data for attr in self._attributes if attr.valid
+            ]
+
         # add security labels
         if self._labels:
-            self._group_data['securityLabel'] = []
-            for label in self._labels:
-                self._group_data['securityLabel'].append(label.data)
+            self._group_data['securityLabel'] = [label.data for label in self._labels]
         # add tags
         if self._tags:
-            self._group_data['tag'] = []
-            for tag in self._tags:
-                if tag.valid:
-                    self._group_data['tag'].append(tag.data)
+            self._group_data['tag'] = [tag.data for tag in self._tags if tag.valid]
         return self._group_data
 
     @property

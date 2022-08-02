@@ -75,10 +75,6 @@ class RelationshipVisitor(Visitor):
                         self.target.setdefault('associatedGroups', []).append(
                             {'groupXid': self.source.get('xid')}
                         )
-                    else:
-                        # TODO handle indicator-to-indicator, we can't do that in TC
-                        pass
-
                     self.done = True
 
                     yield self.target

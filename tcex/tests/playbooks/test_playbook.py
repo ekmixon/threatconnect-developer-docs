@@ -369,9 +369,7 @@ class TestUtils:
 
         # parse variable and send to create_output() method
         parsed_variable = tcex.playbook.parse_variable(variable)
-        variable_name = None  # coverage
-        if variable is not None:
-            variable_name = parsed_variable.get('name')
+        variable_name = parsed_variable.get('name') if variable is not None else None
         tcex.playbook.create_output(variable_name, value)
 
         result = tcex.playbook.read(variable)

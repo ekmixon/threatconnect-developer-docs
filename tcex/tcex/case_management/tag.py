@@ -89,11 +89,11 @@ class Tag(CommonCaseManagement):
     def __init__(self, tcex, **kwargs):
         """Initialize Class properties"""
         super().__init__(tcex, ApiEndpoints.TAGS, kwargs)
-        self._cases = kwargs.get('cases', None)
-        self._description = kwargs.get('description', None)
-        self._last_used = kwargs.get('last_used', None)
-        self._name = kwargs.get('name', None)
-        self._owner = kwargs.get('owner', None)
+        self._cases = kwargs.get('cases')
+        self._description = kwargs.get('description')
+        self._last_used = kwargs.get('last_used')
+        self._name = kwargs.get('name')
+        self._owner = kwargs.get('owner')
 
     @property
     def as_entity(self):

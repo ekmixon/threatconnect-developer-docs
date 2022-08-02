@@ -349,9 +349,8 @@ class TiTcRequest:
             request.Response: The response from the API call.
         """
         url = f'/v2/{main_type}/{unique_id}'
-        if sub_type:
-            if unique_id:
-                url = f'/v2/{main_type}/{sub_type}/{unique_id}'
+        if sub_type and unique_id:
+            url = f'/v2/{main_type}/{sub_type}/{unique_id}'
 
         params = {}
         if owner:
@@ -565,9 +564,8 @@ class TiTcRequest:
             request.Response: The response from the API call.
         """
         url = f'/v2/{main_type}/{unique_id}'
-        if sub_type:
-            if unique_id:
-                url = f'/v2/{main_type}/{sub_type}/{unique_id}'
+        if sub_type and unique_id:
+            url = f'/v2/{main_type}/{sub_type}/{unique_id}'
 
         params = {}
         if owner:
@@ -642,13 +640,14 @@ class TiTcRequest:
         params = params or {}
 
         # This is needed because of tasks
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/victimAssets'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/victimAssets'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/victimAssets'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/victimAssets'
+        )
+
         entity_type = 'victimAsset'
-        asset_type = self.victim_asset_type_mapping.get(asset_type)
-        if asset_type:
+        if asset_type := self.victim_asset_type_mapping.get(asset_type):
             url += f'/{asset_type}'
         return self._iterate(url, params, entity_type)
 
@@ -770,10 +769,11 @@ class TiTcRequest:
 
         """
         params = {'owner': owner} if owner else {}
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/owners'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/owners'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/owners'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/owners'
+        )
 
         r = self._get(url, params=params)
         self.tcex.log.debug(f'status code: {r.status_code}')
@@ -816,10 +816,11 @@ class TiTcRequest:
         """
         params = {'owner': owner} if owner else {}
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/observationCount'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/observationCount'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/observationCount'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/observationCount'
+        )
 
         r = self._get(url, params)
         self.tcex.log.debug(f'status code: {r.status_code}')
@@ -844,10 +845,11 @@ class TiTcRequest:
         if owner:
             params['owner'] = owner
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/observations'
-        else:
-            url = f'/v2/{type}/{sub_type}/{unique_id}/observations'
+        url = (
+            f'/v2/{type}/{sub_type}/{unique_id}/observations'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/observations'
+        )
 
         r = self._get(url, params)
         self.tcex.log.debug(f'status code: {r.status_code}')
@@ -868,10 +870,11 @@ class TiTcRequest:
         """
         params = {'owner': owner} if owner else {}
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/dnsResolution'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/dnsResolution'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/dnsResolution'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/dnsResolution'
+        )
 
         r = self._get(url, params)
         self.tcex.log.debug(f'status code: {r.status_code}')
@@ -894,15 +897,18 @@ class TiTcRequest:
         params = {'owner': owner} if owner else {}
 
         data = {}
-        if self.is_true(value) or self.is_false(value):
+        if self.is_true(value):
+            data['dnsActive'] = self.is_true(value)
+        elif self.is_false(value):
             data['dnsActive'] = self.is_true(value)
         else:
             self.tcex.handle_error(925, ['option', 'dns value', 'value', value])
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}'
+        )
 
         r = self._put_json(url, data, params)
         self.tcex.log.debug(f'status code: {r.status_code}')
@@ -925,15 +931,18 @@ class TiTcRequest:
         params = {'owner': owner} if owner else {}
 
         data = {}
-        if self.is_true(value) or self.is_false(value):
+        if self.is_true(value):
+            data['whoisActive'] = self.is_true(value)
+        elif self.is_false(value):
             data['whoisActive'] = self.is_true(value)
         else:
             self.tcex.handle_error(925, ['option', 'whois value', 'value', value])
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}'
+        )
 
         r = self._put_json(url, data, params)
         self.tcex.log.debug(f'status code: {r.status_code}')
@@ -946,7 +955,7 @@ class TiTcRequest:
         if not value:
             return False
         value = str(value)
-        return value.lower() in ['false', '0', 'f', 'n', 'no']
+        return value.lower() in {'false', '0', 'f', 'n', 'no'}
 
     @staticmethod
     def is_true(value):
@@ -954,7 +963,7 @@ class TiTcRequest:
         if not value:
             return False
         value = str(value)
-        return value.lower() in ['true', '1', 't', 'y', 'yes']
+        return value.lower() in {'true', '1', 't', 'y', 'yes'}
 
     def deleted(
         self, main_type, sub_type, deleted_since=None, owner=None, filters=None, params=None
@@ -981,10 +990,11 @@ class TiTcRequest:
         if deleted_since:
             params['deletedSince'] = deleted_since
 
-        if not sub_type:
-            url = f'/v2/{main_type}/deleted'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/deleted'
+        url = (
+            f'/v2/{main_type}/{sub_type}/deleted'
+            if sub_type
+            else f'/v2/{main_type}/deleted'
+        )
 
         r = self._get(url, params)
 
@@ -992,9 +1002,7 @@ class TiTcRequest:
             err = r.text or r.reason
             self.tcex.handle_error(950, [r.status_code, err, r.url])
 
-        data = r.json().get('data', {}).get('indicator', [])
-
-        yield from data
+        yield from r.json().get('data', {}).get('indicator', [])
 
     def pivot_from_tag(self, target, tag_name, filters=None, owner=None, params=None):
         """
@@ -1092,10 +1100,11 @@ class TiTcRequest:
         if owner:
             params['owner'] = owner
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/indicators'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/indicators'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/indicators'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/indicators'
+        )
 
         yield from self._iterate(url, params, 'indicator')
 
@@ -1116,10 +1125,11 @@ class TiTcRequest:
         if owner:
             params['owner'] = owner
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/groups'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/groups'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/groups'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/groups'
+        )
 
         yield from self._iterate(url, params, 'group')
 
@@ -1185,10 +1195,11 @@ class TiTcRequest:
 
         api_branch = api_branch or association_type.api_branch
         api_entity = api_entity or association_type.api_entity
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/indicators/{api_branch}'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/indicators/{api_branch}'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/indicators/{api_branch}'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/indicators/{api_branch}'
+        )
 
         yield from self._iterate(url, params, api_entity)
 
@@ -1225,10 +1236,12 @@ class TiTcRequest:
         api_entity = api_entity or target.api_entity
 
         if target and target.is_task():
-            if not sub_type:
-                url = f'/v2/{main_type}/{unique_id}/tasks/{api_branch}'
-            else:
-                url = f'/v2/{main_type}/{sub_type}/{unique_id}/tasks'
+            url = (
+                f'/v2/{main_type}/{sub_type}/{unique_id}/tasks'
+                if sub_type
+                else f'/v2/{main_type}/{unique_id}/tasks/{api_branch}'
+            )
+
         elif not sub_type:
             url = f'/v2/{main_type}/{unique_id}/groups/{api_branch}'
         else:
@@ -1380,10 +1393,11 @@ class TiTcRequest:
         params = params or {}
         params['createActivityLog'] = False
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/victims/{victim_id}'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/victims/{victim_id}'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/victims/{victim_id}'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/victims/{victim_id}'
+        )
 
         return self._get(url, params)
 
@@ -1401,10 +1415,11 @@ class TiTcRequest:
         """
         params = params or {}
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/victims'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/victims'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/victims'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/victims'
+        )
 
         yield from self._iterate(url, params, 'victim')
 
@@ -1428,10 +1443,11 @@ class TiTcRequest:
 
     def get_file_hash(self, main_type, sub_type, unique_id, hash_type='sha256'):
         """ Gets the hash of a file. """
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/download'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/download'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/download'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/download'
+        )
 
         if hash_type == 'sha256':
             hashed_file = hashlib.sha256()  # nosec
@@ -1541,10 +1557,7 @@ class TiTcRequest:
         if action == 'GET':
             return self._get(url, params)
 
-        if action == 'DELETE':
-            return self._delete(url, params)
-
-        return None
+        return self._delete(url, params) if action == 'DELETE' else None
 
     def add_file_occurrence(self, main_type, sub_type, unique_id, name, date, path, owner=None):
         """
@@ -1671,10 +1684,11 @@ class TiTcRequest:
             params['owner'] = owner
         if filters and filters.filters:
             params['filters'] = filters.filters_string
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/tags'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/tags'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/tags'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/tags'
+        )
 
         yield from self._iterate(url, params, 'tag')
 
@@ -1698,10 +1712,11 @@ class TiTcRequest:
             params['owner'] = owner
         if filters and filters.filters:
             params['filters'] = filters.filters_string
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/securityLabels'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/securityLabels'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/securityLabels'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/securityLabels'
+        )
 
         yield from self._iterate(url, params, 'securityLabel')
 
@@ -1777,10 +1792,11 @@ class TiTcRequest:
 
         action = action.upper()
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/securityLabels/{quote(label)}'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/securityLabels/{quote(label)}'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/securityLabels/{quote(label)}'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/securityLabels/{quote(label)}'
+        )
 
         if action == 'ADD':
             return self._post(url, {}, params)
@@ -1788,10 +1804,7 @@ class TiTcRequest:
         if action == 'DELETE':
             return self._delete(url, params)
 
-        if action == 'GET':
-            return self._get(url, params)
-
-        return None
+        return self._get(url, params) if action == 'GET' else None
 
     def attributes(self, main_type, sub_type, unique_id, owner=None, params=None):
         """
@@ -1812,10 +1825,11 @@ class TiTcRequest:
         if owner:
             params['owner'] = owner
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/attributes'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/attributes'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/attributes'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/attributes'
+        )
 
         yield from self._iterate(url, params, 'attribute')
 
@@ -1840,18 +1854,16 @@ class TiTcRequest:
         if owner:
             params['owner'] = owner
         action = action.upper()
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/attributes/{attribute_id}'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/attributes/{attribute_id}'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/attributes/{attribute_id}'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/attributes/{attribute_id}'
+        )
 
         if action == 'GET':
             return self._get(url, params)
 
-        if action == 'DELETE':
-            return self._delete(url, params)
-
-        return None
+        return self._delete(url, params) if action == 'DELETE' else None
 
     def get_attribute(self, main_type, sub_type, unique_id, attribute_id, owner=None, params=None):
         """
@@ -1920,10 +1932,11 @@ class TiTcRequest:
             params = {}
         if owner:
             params['owner'] = owner
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/attributes'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/attributes'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/attributes'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/attributes'
+        )
 
         json = {'type': attribute_type, 'value': attribute_value}
 
@@ -1967,10 +1980,11 @@ class TiTcRequest:
             params = {}
         if owner:
             params['owner'] = owner
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/attributes/{attribute_id}'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/attributes/{attribute_id}'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/attributes/{attribute_id}'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/attributes/{attribute_id}'
+        )
 
         json = {'value': attribute_value}
 
@@ -2002,10 +2016,11 @@ class TiTcRequest:
         if owner:
             params['owner'] = owner
 
-        if not sub_type:
-            url = f'/v2/{main_type}/{unique_id}/attributes/{attribute_id}/securityLabels'
-        else:
-            url = f'/v2/{main_type}/{sub_type}/{unique_id}/attributes/{attribute_id}/securityLabels'
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/attributes/{attribute_id}/securityLabels'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/attributes/{attribute_id}/securityLabels'
+        )
 
         yield from self._iterate(url, params, 'securityLabel')
 
@@ -2040,26 +2055,21 @@ class TiTcRequest:
             params['owner'] = owner
         action = action.upper()
 
-        if not sub_type:
-            url = (
-                f'/v2/{main_type}/{unique_id}/attributes/{attribute_id}/securityLabels/'
-                f'{quote(label)}'
-            )
-        else:
-            url = (
-                f'/v2/{main_type}/{sub_type}/{unique_id}/attributes/{attribute_id}/securityLabels/'
-                f'{quote(label)}'
-            )
+        url = (
+            f'/v2/{main_type}/{sub_type}/{unique_id}/attributes/{attribute_id}/securityLabels/'
+            f'{quote(label)}'
+            if sub_type
+            else f'/v2/{main_type}/{unique_id}/attributes/{attribute_id}/securityLabels/'
+            f'{quote(label)}'
+        )
+
         if action == 'ADD':
             return self._post(url, {}, params)
 
         if action == 'DELETE':
             return self._delete(url, params)
 
-        if action == 'GET':
-            return self._get(url, params)
-
-        return None
+        return self._get(url, params) if action == 'GET' else None
 
     def get_attribute_label(
         self, main_type, sub_type, unique_id, attribute_id, label, owner=None, params=None
@@ -2158,9 +2168,7 @@ class TiTcRequest:
             return self._post(url, {}, params)
         if action == 'GET':
             return self._get(url, params=params)
-        if action == 'DELETE':
-            return self._delete(url, params)
-        return None
+        return self._delete(url, params) if action == 'DELETE' else None
 
     def get_assignee(self, main_type, sub_type, unique_id, assignee_id, params=None):
         """
@@ -2244,9 +2252,7 @@ class TiTcRequest:
             return self._post(url, {}, params)
         if action == 'GET':
             return self._get(url=url, params=params)
-        if action == 'DELETE':
-            return self._delete(url=url)
-        return None
+        return self._delete(url=url) if action == 'DELETE' else None
 
     def get_escalatee(self, main_type, sub_type, unique_id, escalatee_id, params=None):
         """

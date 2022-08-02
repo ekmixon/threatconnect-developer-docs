@@ -37,8 +37,7 @@ class File(Indicator):
         )
         if self.unique_id:
             for value in self.unique_id.split(':'):
-                value = value.strip()
-                if value:
+                if value := value.strip():
                     self.unique_id = value
                     break
         self.data['size'] = kwargs.get('size', 0)
@@ -63,14 +62,14 @@ class File(Indicator):
         If the md5/sha1/sha256 has been provided returns that the File can be
         created, otherwise returns that the File cannot be created.
         """
-        if (
-            self.unique_id
-            or self.data.get('md5')
-            or self.data.get('sha1')
-            or self.data.get('sha256')
-        ):
-            return True
-        return False
+        return bool(
+            (
+                self.unique_id
+                or self.data.get('md5')
+                or self.data.get('sha1')
+                or self.data.get('sha256')
+            )
+        )
 
     def _set_unique_id(self, json_response):
         """Set the unique_id provided a json response.
@@ -98,9 +97,6 @@ class File(Indicator):
             summary.append(val2)
         if val3 is not None:
             summary.append(val3)
-        if not summary:
-            # Indicator object has no logger to output warning
-            pass
         return ' : '.join(summary)
 
     def occurrences(self):

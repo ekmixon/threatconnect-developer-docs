@@ -460,7 +460,7 @@ class StixModel:
             'windows-registry-key': self.registry_key_mapping,
             'url': self.url_mapping,
         }
-        type_mapping.update(custom_type_mapping or {})
+        type_mapping |= (custom_type_mapping or {})
         visitor_mapping = {'relationship': self.relationship}
 
         tc_data = []
@@ -551,25 +551,25 @@ class StixModel:
                     value = copy.deepcopy(value)
 
                 if key in ['securityLabel', 'tag', 'attribute']:
-                    mapped_value = self._custom_stix_mapping(d, key, value)
-                    if mapped_value:
+                    if mapped_value := self._custom_stix_mapping(d, key, value):
                         mapped_obj[key] = mapped_value
                     else:
                         del mapped_obj[key]
                 else:
                     if isinstance(value, list):
-                        new_list = []
-                        for item in value:
-                            new_list.append(list(self._map(d, item))[0])
-
+                        new_list = [list(self._map(d, item))[0] for item in value]
                         mapped_obj[key] = new_list
                         continue
                     if isinstance(value, dict):
                         mapped_obj[key] = list(self._map(d, mapped_obj[key]))[0]
                         continue
 
-                    resolved_value = jmespath.search(f'{value}', jmespath.search('@', d)) or []
-                    if resolved_value:
+                    if (
+                        resolved_value := jmespath.search(
+                            f'{value}', jmespath.search('@', d)
+                        )
+                        or []
+                    ):
                         mapped_obj[key] = resolved_value
                     else:
                         del mapped_obj[key]
@@ -578,13 +578,9 @@ class StixModel:
     @staticmethod
     def _remove_milliseconds(time):
         time = time.split('.')
-        milliseconds = ''
-        if len(time) > 1:
-            milliseconds = time.pop()
+        milliseconds = time.pop() if len(time) > 1 else ''
         new_time = ''.join(time)
-        if milliseconds.lower().endswith('z'):
-            return f'{new_time}Z'
-        return new_time
+        return f'{new_time}Z' if milliseconds.lower().endswith('z') else new_time
 
     def _custom_stix_mapping(self, data, key, value):
         if key == 'securityLabel':
@@ -600,10 +596,7 @@ class StixModel:
             return object_marking_refs
         if key == 'tag':
             resolved_values = jmespath.search(f'{value}', jmespath.search('@', data)) or []
-            tags = []
-            for resolved_value in resolved_values:
-                tags.append({'name': resolved_value})
-            return tags
+            return [{'name': resolved_value} for resolved_value in resolved_values]
         if key == 'attribute':
             attributes = []
             for attribute in value:

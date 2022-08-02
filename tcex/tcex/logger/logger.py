@@ -63,10 +63,7 @@ class Logger:
         Returns:
             bool: True if handler current exists
         """
-        for h in self._logger.handlers:
-            if h.get_name() == handler_name:
-                return True
-        return False
+        return any(h.get_name() == handler_name for h in self._logger.handlers)
 
     @property
     def log(self) -> logging.Logger:

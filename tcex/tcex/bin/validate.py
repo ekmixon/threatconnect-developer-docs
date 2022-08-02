@@ -148,14 +148,13 @@ class Validate(Bin):
         Returns:
             bool: Returns True if the module is in the stdlib or template.
         """
-        if (
+        return (
             module in stdlib_list('3.6')
             or module in stdlib_list('3.7')
             or module in stdlib_list('3.8')
-            or module in ['app', 'args', 'job_app', 'playbook_app', 'run', 'service_app']
-        ):
-            return True
-        return False
+            or module
+            in ['app', 'args', 'job_app', 'playbook_app', 'run', 'service_app']
+        )
 
     @staticmethod
     def check_imported(module):
@@ -175,7 +174,7 @@ class Validate(Bin):
         # https://docs.python.org/3/library/importlib.html#checking-if-a-module-can-be-imported
         find_spec = importlib.util.find_spec(module)
         found = find_spec is not None
-        if found is True:
+        if found:
             # if dist-packages|site-packages in module_path the import doesn't count
             if 'dist-packages' in find_spec.origin:
                 found = False
@@ -314,20 +313,19 @@ class Validate(Bin):
                     # any item in list afterwards is a problem
                     ij_input_names.remove(p.get('name'))
 
-                if 'sqlite3' in sys.modules:
-                    if p.get('display'):
-                        display_query = (
-                            f'''SELECT * FROM {self.permutations.input_table}'''  # nosec
-                            f''' WHERE {p.get('display')}'''
+                if 'sqlite3' in sys.modules and p.get('display'):
+                    display_query = (
+                        f'''SELECT * FROM {self.permutations.input_table}'''  # nosec
+                        f''' WHERE {p.get('display')}'''
+                    )
+                    try:
+                        self.permutations.db_conn.execute(display_query.replace('"', ''))
+                    except sqlite3.Error:
+                        self.validation_data['errors'].append(
+                            '''Layouts input.parameters[].display validations failed '''
+                            f'''("{p.get('display')}" query is an invalid statement).'''
                         )
-                        try:
-                            self.permutations.db_conn.execute(display_query.replace('"', ''))
-                        except sqlite3.Error:
-                            self.validation_data['errors'].append(
-                                '''Layouts input.parameters[].display validations failed '''
-                                f'''("{p.get('display')}" query is an invalid statement).'''
-                            )
-                            status = False
+                        status = False
 
         # update validation data for module
         self.validation_data['layouts'].append({'params': 'inputs', 'status': status})
@@ -352,20 +350,19 @@ class Validate(Bin):
                 )
                 status = False
 
-            if 'sqlite3' in sys.modules:
-                if o.get('display'):
-                    display_query = (
-                        f'''SELECT * FROM {self.permutations.input_table} '''  # nosec
-                        f'''WHERE {o.get('display')}'''
+            if 'sqlite3' in sys.modules and o.get('display'):
+                display_query = (
+                    f'''SELECT * FROM {self.permutations.input_table} '''  # nosec
+                    f'''WHERE {o.get('display')}'''
+                )
+                try:
+                    self.permutations.db_conn.execute(display_query.replace('"', ''))
+                except sqlite3.Error:
+                    self.validation_data['errors'].append(
+                        f"""Layouts outputs.display validations failed ("{o.get('display')}" """
+                        f"""query is an invalid statement)."""
                     )
-                    try:
-                        self.permutations.db_conn.execute(display_query.replace('"', ''))
-                    except sqlite3.Error:
-                        self.validation_data['errors'].append(
-                            f"""Layouts outputs.display validations failed ("{o.get('display')}" """
-                            f"""query is an invalid statement)."""
-                        )
-                        status = False
+                    status = False
 
         # update validation data for module
         self.validation_data['layouts'].append({'params': 'outputs', 'status': status})
@@ -388,9 +385,7 @@ class Validate(Bin):
                 except SyntaxError:
                     status = False
                     # cleanup output
-                    e = []
-                    for line in traceback.format_exc().split('\n')[-5:-2]:
-                        e.append(line.strip())
+                    e = [line.strip() for line in traceback.format_exc().split('\n')[-5:-2]]
                     error = ' '.join(e)
 
             elif filename.endswith('.json'):
@@ -446,10 +441,13 @@ class Validate(Bin):
     @property
     def layout_json_schema(self):
         """Load layout.json schema file."""
-        if self._layout_json_schema is None and self.layout_json_schema_file is not None:
-            if os.path.isfile(self.layout_json_schema_file):
-                with open(self.layout_json_schema_file) as fh:
-                    self._layout_json_schema = json.load(fh)
+        if (
+            self._layout_json_schema is None
+            and self.layout_json_schema_file is not None
+            and os.path.isfile(self.layout_json_schema_file)
+        ):
+            with open(self.layout_json_schema_file) as fh:
+                self._layout_json_schema = json.load(fh)
         return self._layout_json_schema
 
     def print_json(self):
@@ -518,7 +516,4 @@ class Validate(Bin):
     @staticmethod
     def status_value(status):
         """Return the appropriate status color."""
-        status_value = 'passed'
-        if not status:
-            status_value = 'failed'
-        return status_value
+        return 'passed' if status else 'failed'

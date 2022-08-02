@@ -26,7 +26,7 @@ class StixIPBase(StixModel):
             'confidence': '@.confidence',
             'attributes': [{'type': 'External ID', 'value': '@.id'}],
         }
-        mapper_ip.update(self.default_map)
+        mapper_ip |= self.default_map
 
         mapper_cider = {
             'confidence': '@.confidence',
@@ -35,7 +35,7 @@ class StixIPBase(StixModel):
             'xid': '@.id',
             'attributes': [{'type': 'External ID', 'value': '@.id'}],
         }
-        mapper_cider.update(self.default_map)
+        mapper_cider |= self.default_map
 
         if isinstance(stix_data, dict):
             stix_data = [stix_data]

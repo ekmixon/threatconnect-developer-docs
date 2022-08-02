@@ -154,16 +154,11 @@ class PlaybooksBase:
     @staticmethod
     def _is_key_value(data):
         """Return True if provided data has proper structure for Key Value."""
-        if data is None:
-            return False
-        return all(x in data for x in ['key', 'value'])
+        return False if data is None else all(x in data for x in ['key', 'value'])
 
     def _is_key_value_array(self, data):
         """Return True if provided data has proper structure for Key Value Array."""
-        for d in data:
-            if not self._is_key_value(d):
-                return False
-        return True
+        return all(self._is_key_value(d) for d in data)
 
     @staticmethod
     def _is_tc_entity(data):
@@ -174,10 +169,7 @@ class PlaybooksBase:
 
     def _is_tc_entity_array(self, data):
         """Return True if provided data has proper structure for TC Entity Array."""
-        for d in data:
-            if not self._is_tc_entity(d):
-                return False
-        return True
+        return all(self._is_tc_entity(d) for d in data)
 
     @staticmethod
     def _load_value(value):
@@ -307,10 +299,7 @@ class PlaybooksBase:
                 value = self._read_embedded(value)
 
             # convert int to str
-            value_coerced = []
-            for v in self._load_value(value):
-                # coerce string values
-                value_coerced.append(self._coerce_string_value(v))
+            value_coerced = [self._coerce_string_value(v) for v in self._load_value(value)]
             value = value_coerced
         elif variable_type in ['TCEntityArray', 'TCEnhancedEntity', 'TCEnhancedEntityArray']:
             value = self._load_value(value)
@@ -391,8 +380,7 @@ class PlaybooksBase:
     @property
     def _variable_pattern(self):
         """Regex pattern to match and parse a playbook variable."""
-        variable_pattern = r'#([A-Za-z]+)'  # match literal (#App,#Trigger) at beginning of String
-        variable_pattern += r':([\d]+)'  # app id (:7979)
+        variable_pattern = r'#([A-Za-z]+)' + r':([\d]+)'
         variable_pattern += r':([A-Za-z0-9_\.\-\[\]]+)'  # variable name (:variable_name)
         variable_pattern += r'!(StringArray|BinaryArray|KeyValueArray'  # variable type (array)
         variable_pattern += r'|TCEntityArray|TCEnhancedEntityArray'  # variable type (array)
@@ -440,13 +428,13 @@ class PlaybooksBase:
         """
         # TODO: need to verify if core still sends improper JSON for KeyValueArrays
         if data is not None:  # pragma: no cover
-            variables = []
-            for v in re.finditer(self._vars_keyvalue_embedded, data):
-                variables.append(v.group(0))
+            variables = [
+                v.group(0) for v in re.finditer(self._vars_keyvalue_embedded, data)
+            ]
 
             for var in set(variables):  # recursion over set to handle duplicates
                 # pull (#App:1441:embedded_string!String) from (": #App:1441:embedded_string!String)
-                variable_string = re.search(self._variable_parse, var).group(0)
+                variable_string = re.search(self._variable_parse, var)[0]
                 # reformat to replace the correct instance only, handling the case where a variable
                 # is embedded multiple times in the same key value array.
                 data = data.replace(var, f'": "{variable_string}"')

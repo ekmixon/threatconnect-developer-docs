@@ -133,7 +133,7 @@ class WebhookTriggerService(CommonServiceTrigger):
         }
         if isinstance(callback_response, dict):
             # webhook responses are for providers that require a subscription req/resp.
-            response.update(callback_response)
+            response |= callback_response
 
         self.publish_webhook_event_response(message, callback_response)
 
@@ -141,8 +141,11 @@ class WebhookTriggerService(CommonServiceTrigger):
     def command_map(self) -> dict:
         """Return the command map for the current Service type."""
         command_map: dict = super().command_map
-        command_map.update({'webhookevent': self.process_webhook_event_command})
-        command_map.update({'webhookmarshallevent': self.process_webhook_marshall_event_command})
+        command_map['webhookevent'] = self.process_webhook_event_command
+        command_map[
+            'webhookmarshallevent'
+        ] = self.process_webhook_marshall_event_command
+
         return command_map
 
     def process_webhook_event_command(self, message: dict) -> None:
@@ -217,16 +220,15 @@ class WebhookTriggerService(CommonServiceTrigger):
                 'webhookserviceendpoint'
             ):
                 # add request_key arg when marshall or services endpoints feature is set (kwarg)
-                callback_data.update({'request_key': message.get('requestKey')})
+                callback_data['request_key'] = message.get('requestKey')
             elif not self.ij.has_feature('webhookserviceendpoint'):
                 # add optional inputs for "standard" and "marshall" webhook trigger
-                callback_data.update(
-                    {
-                        'config': config,
-                        'playbook': playbook,
-                        'trigger_id': message.get('triggerId'),
-                    }
-                )
+                callback_data |= {
+                    'config': config,
+                    'playbook': playbook,
+                    'trigger_id': message.get('triggerId'),
+                }
+
 
             callback_response: Union[bool, Callable[..., Any], dict] = self.webhook_event_callback(
                 **callback_data
@@ -320,7 +322,7 @@ class WebhookTriggerService(CommonServiceTrigger):
                     trigger_id=message.get('triggerId'),
                 )
                 if isinstance(callback_response, dict):
-                    response.update(callback_response)
+                    response |= callback_response
             except Exception as e:
                 self.increment_metric('Errors')
                 self.log.error(

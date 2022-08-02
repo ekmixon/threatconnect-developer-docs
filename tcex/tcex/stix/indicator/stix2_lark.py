@@ -86,7 +86,7 @@ class Stix2IndicatorTransformer(Transformer):
     def object_path(*args):
         """object_path production"""
 
-        result = args[0] + ':' + args[1]
+        result = f'{args[0]}:{args[1]}'
         if len(args) > 2:
             result += '.'.join(args[2:])
         return result
@@ -133,8 +133,7 @@ class Stix2IndicatorTransformer(Transformer):
     def indicator_list(path, values):
         """Do indicator_list production"""
 
-        indicators = [Indicator(path, value) for value in values]
-        return indicators
+        return [Indicator(path, value) for value in values]
 
     @staticmethod
     def chain_left_right(left, right):

@@ -54,10 +54,11 @@ class Filters:
     @property
     def filters_string(self):
         """Return a filter string to be used as a param"""
-        filter_strings = []
-        for filter_key in self.filters:
-            filter_strings.append(
-                filter_key.get('name') + filter_key.get('operator') + filter_key.get('value')
-            )
+        filter_strings = [
+            filter_key.get('name')
+            + filter_key.get('operator')
+            + filter_key.get('value')
+            for filter_key in self.filters
+        ]
 
         return ','.join(filter_strings)

@@ -207,7 +207,6 @@ class TestFileIndicators(TestThreatIntelligence):
     def tests_ti_file_get_actions(self):
         """Test retrieving file actions."""
         file = self.ti_helper.create_indicator()
-        action_targets = []
         ips = [self.ti_helper.rand_ip(), self.ti_helper.rand_ip()]
         indicator_data = {
             'confidence': randint(0, 100),
@@ -215,7 +214,7 @@ class TestFileIndicators(TestThreatIntelligence):
             'owner': self.owner,
             'rating': randint(0, 5),
         }
-        action_targets.append(self.ti.address(**indicator_data))
+        action_targets = [self.ti.address(**indicator_data)]
         indicator_data = {
             'confidence': randint(0, 100),
             'ip': ips[1],

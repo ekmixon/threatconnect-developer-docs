@@ -28,7 +28,7 @@ class TestPlaybookAot:
 
         # send redis rpush AOT message
         aot_config_data = {'my_bool': 'true', 'my_multi': 'one|two'}
-        aot_config_data.update(app.config_data)
+        aot_config_data |= app.config_data
         aot_msg = {'type': 'execute', 'params': aot_config_data}
         redis_client.rpush(config_data.get('tc_action_channel'), json.dumps(aot_msg))
 

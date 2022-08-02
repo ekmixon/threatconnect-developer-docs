@@ -183,14 +183,14 @@ class TcexJson:
     def update_lib_versions(self, json_data):
         """Update the lib_versions array in the tcex.json file."""
         if os.getenv('TCEX_LIB_VERSIONS') and not self.lib_versions:
-            lib_versions = []
-            for version in os.getenv('TCEX_LIB_VERSIONS').split(','):
-                lib_versions.append(
-                    {
-                        'lib_dir': f'lib_${{env:{version}}}',
-                        'python_executable': f'~/.pyenv/versions/${{env:{version}}}/bin/python',
-                    }
-                )
+            lib_versions = [
+                {
+                    'lib_dir': f'lib_${{env:{version}}}',
+                    'python_executable': f'~/.pyenv/versions/${{env:{version}}}/bin/python',
+                }
+                for version in os.getenv('TCEX_LIB_VERSIONS').split(',')
+            ]
+
             json_data['lib_versions'] = lib_versions
 
     @staticmethod

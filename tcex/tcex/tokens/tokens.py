@@ -89,7 +89,7 @@ class Tokens:
             )
             return
 
-        self.token_map[key] = {'token': token, 'token_expires': int(expires)}
+        self.token_map[key] = {'token': token, 'token_expires': expires}
         self.log.info(
             f'feature=token, action=token-register, key={key}, '
             f'token="{self.utils.printable_cred(token, 10)}", '

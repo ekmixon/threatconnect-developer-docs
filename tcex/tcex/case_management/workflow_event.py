@@ -97,17 +97,17 @@ class WorkflowEvent(CommonCaseManagement):
         self._case_xid = kwargs.get('case_xid', None) or kwargs.get('parent_case', {}).get(
             'xid', None
         )
-        self._date_added = kwargs.get('date_added', None)
-        self._deleted = kwargs.get('deleted', None)
-        self._deleted_reason = kwargs.get('deleted_reason', None)
-        self._event_date = kwargs.get('event_date', None)
-        self._link = kwargs.get('link', None)
-        self._link_text = kwargs.get('link_text', None)
-        self._notes = kwargs.get('notes', None)
-        self._parent_case = kwargs.get('parent_case', None)
-        self._summary = kwargs.get('summary', None)
-        self._system_generated = kwargs.get('system_generated', None)
-        self._user = kwargs.get('user', None)
+        self._date_added = kwargs.get('date_added')
+        self._deleted = kwargs.get('deleted')
+        self._deleted_reason = kwargs.get('deleted_reason')
+        self._event_date = kwargs.get('event_date')
+        self._link = kwargs.get('link')
+        self._link_text = kwargs.get('link_text')
+        self._notes = kwargs.get('notes')
+        self._parent_case = kwargs.get('parent_case')
+        self._summary = kwargs.get('summary')
+        self._system_generated = kwargs.get('system_generated')
+        self._user = kwargs.get('user')
 
     def add_note(self, **kwargs):
         """Add a note to the workflow event."""
@@ -242,9 +242,7 @@ class WorkflowEvent(CommonCaseManagement):
     @property
     def user(self):
         """Return the **User** for the Workflow Event."""
-        if self._user:
-            return self.tcex.cm.user(**self._user)
-        return self._user
+        return self.tcex.cm.user(**self._user) if self._user else self._user
 
 
 class FilterWorkflowEvents(Filter):

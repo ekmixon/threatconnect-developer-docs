@@ -114,27 +114,27 @@ class Artifact(CommonCaseManagement):
             }
         ]
 
-        self._analytics_priority = kwargs.get('analytics_priority', None)
-        self._analytics_priority_level = kwargs.get('analytics_priority_level', None)
-        self._analytics_score = kwargs.get('analytics_score', None)
-        self._analytics_status = kwargs.get('analytics_status', None)
-        self._analytics_type = kwargs.get('analytics_type', None)
-        self._artifact_type = kwargs.get('artifact_type', None)
+        self._analytics_priority = kwargs.get('analytics_priority')
+        self._analytics_priority_level = kwargs.get('analytics_priority_level')
+        self._analytics_score = kwargs.get('analytics_score')
+        self._analytics_status = kwargs.get('analytics_status')
+        self._analytics_type = kwargs.get('analytics_type')
+        self._artifact_type = kwargs.get('artifact_type')
         self._case_id = kwargs.get('case_id', None) or kwargs.get('parent_case', {}).get('id', None)
-        self._case_xid = kwargs.get('case_xid', None)
-        self._date_added = kwargs.get('date_added', None)
-        self._field_name = kwargs.get('field_name', None)
-        self._file_data = kwargs.get('file_data', None)
-        self._intel_type = kwargs.get('intel_type', None)
-        self._links = kwargs.get('links', None)
-        self._notes = kwargs.get('notes', None)
-        self._parent_case = kwargs.get('parent_case', None)
-        self._source = kwargs.get('source', None)
-        self._summary = kwargs.get('summary', None)
-        self._task = kwargs.get('task', None)
-        self._task_id = kwargs.get('task_id', None)
-        self._task_xid = kwargs.get('task_xid', None)
-        self._type = kwargs.get('type', None)
+        self._case_xid = kwargs.get('case_xid')
+        self._date_added = kwargs.get('date_added')
+        self._field_name = kwargs.get('field_name')
+        self._file_data = kwargs.get('file_data')
+        self._intel_type = kwargs.get('intel_type')
+        self._links = kwargs.get('links')
+        self._notes = kwargs.get('notes')
+        self._parent_case = kwargs.get('parent_case')
+        self._source = kwargs.get('source')
+        self._summary = kwargs.get('summary')
+        self._task = kwargs.get('task')
+        self._task_id = kwargs.get('task_id')
+        self._task_xid = kwargs.get('task_xid')
+        self._type = kwargs.get('type')
 
     def add_note(self, **kwargs):
         """Add a Note to a Case."""
@@ -286,9 +286,7 @@ class Artifact(CommonCaseManagement):
     @property
     def task(self):
         """Return the **Task** for the Note."""
-        if self._task:
-            return self.tcex.cm.task(**self._task)
-        return self._task
+        return self.tcex.cm.task(**self._task) if self._task else self._task
 
     @property
     def task_id(self):

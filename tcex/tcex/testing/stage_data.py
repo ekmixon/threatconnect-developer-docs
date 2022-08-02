@@ -66,8 +66,7 @@ class Redis:
 
     def delete_context(self, context):
         """Delete data in redis"""
-        keys = self.redis_client.hkeys(context)
-        if keys:
+        if keys := self.redis_client.hkeys(context):
             return self.redis_client.hdel(context, *keys)
         return 0
 
@@ -75,9 +74,7 @@ class Redis:
     def _decode_binary(binary_data, variable):
         """Base64 decode binary data."""
         try:
-            data = None
-            if binary_data is not None:
-                data = base64.b64decode(binary_data)
+            data = base64.b64decode(binary_data) if binary_data is not None else None
         except binascii.Error as e:
             print(
                 f'The Binary staging data for variable {variable} is not properly base64 encoded '
@@ -97,11 +94,12 @@ class ThreatConnect:
 
     def dir(self, directory, owner, batch=False):
         """Stages the directory"""
-        entities = []
-        for stage_file in os.listdir(directory):
-            if not (stage_file.endswith('.json') and stage_file.startswith('tc_stage_')):
-                continue
-            entities.append(self._convert_to_entities(f'{directory}/{stage_file}'))
+        entities = [
+            self._convert_to_entities(f'{directory}/{stage_file}')
+            for stage_file in os.listdir(directory)
+            if stage_file.endswith('.json') and stage_file.startswith('tc_stage_')
+        ]
+
         return self.entities(entities, owner, batch=batch)
 
     def file(self, file, owner, batch=False):
@@ -144,7 +142,7 @@ class ThreatConnect:
         else:
             for key, value in entities.items():
                 response.append(self.entity(key, value, owner))
-        return response if not batch else None
+        return None if batch else response
 
     def entity(self, key, value, owner=None):
         """Stage data in ThreatConnect"""

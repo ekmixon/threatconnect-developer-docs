@@ -341,11 +341,11 @@ class Playbooks(PlaybooksBase):
 
     def is_variable(self, key):
         """Return True if provided key is a properly formatted variable."""
-        if not isinstance(key, str):
-            return False
-        if re.match(self._variable_match, key):
-            return True
-        return False
+        return (
+            bool(re.match(self._variable_match, key))
+            if isinstance(key, str)
+            else False
+        )
 
     @property
     def output_variables_by_name(self):
@@ -379,12 +379,7 @@ class Playbooks(PlaybooksBase):
             variable = variable.strip()
             if re.match(self._variable_match, variable):
                 var = re.search(self._variable_parse, variable)
-                data = {
-                    'root': var.group(0),
-                    'job_id': var.group(2),
-                    'name': var.group(3),
-                    'type': var.group(4),
-                }
+                data = {'root': var[0], 'job_id': var[2], 'name': var[3], 'type': var[4]}
         return data
 
     def read(self, key, array=False, embedded=True):
@@ -429,13 +424,7 @@ class Playbooks(PlaybooksBase):
 
         # return data as a list
         if array and not isinstance(value, list):
-            if value is not None:
-                value = [value]
-            else:
-                # Adding none value to list breaks App logic. It's better to not request
-                # Array and build array externally if None values are required.
-                value = []
-
+            value = [value] if value is not None else []
         return value
 
     def _entity_field(self, key, field, entity_type=None, default=None):
@@ -486,13 +475,11 @@ class Playbooks(PlaybooksBase):
         is_tc_entity = variable_type in ['tcentity', 'tcentityarray']
 
         if is_tc_enhanced:
-            values = [i.get(enhanced_entity_field, default) for i in read_results]
+            return [i.get(enhanced_entity_field, default) for i in read_results]
         elif is_tc_entity:
-            values = [i.get(field, default) for i in read_results]
+            return [i.get(field, default) for i in read_results]
         else:
-            values = read_results
-
-        return values
+            return read_results
 
     def read_indicator_values(self, key, default=None):
         """Read the value of the given key and return indicators from the value.
@@ -703,7 +690,7 @@ class Playbooks(PlaybooksBase):
         if isinstance(variable, str):
             variable = variable.strip()
             if re.match(self._variable_match, variable):
-                var_type = re.search(self._variable_parse, variable).group(4)
+                var_type = re.search(self._variable_parse, variable)[4]
         return var_type
 
     def write_output(self):

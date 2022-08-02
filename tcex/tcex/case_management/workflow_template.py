@@ -82,15 +82,15 @@ class WorkflowTemplate(CommonCaseManagement):
     def __init__(self, tcex, **kwargs):
         """Initialize Class properties."""
         super().__init__(tcex, ApiEndpoints.WORKFLOW_TEMPLATES, kwargs)
-        self._active = kwargs.get('active', None)
-        self._assignee = kwargs.get('assignee', None)
-        self._cases = kwargs.get('cases', None)
-        self._config_artifact = kwargs.get('config_artifact', None)
-        self._config_playbook = kwargs.get('config_playbook', None)
-        self._config_task = kwargs.get('config_task', None)
-        self._description = kwargs.get('description', None)
-        self._name = kwargs.get('name', None)
-        self._version = kwargs.get('version', None)
+        self._active = kwargs.get('active')
+        self._assignee = kwargs.get('assignee')
+        self._cases = kwargs.get('cases')
+        self._config_artifact = kwargs.get('config_artifact')
+        self._config_playbook = kwargs.get('config_playbook')
+        self._config_task = kwargs.get('config_task')
+        self._description = kwargs.get('description')
+        self._name = kwargs.get('name')
+        self._version = kwargs.get('version')
 
     @property
     def active(self):

@@ -56,14 +56,10 @@ class Validator:
         try:
             f = float(x)
             i = int(f)
-        except TypeError:
-            return x  # return original value
-        except ValueError:
+        except (TypeError, ValueError):
             return x  # return original value
         else:
-            if f != i:
-                return f  # return float
-            return i  # return int
+            return f if f != i else i
 
     def compare(
         self,
@@ -206,7 +202,7 @@ class Validator:
     @staticmethod
     def operator_deep_diff(
         app_data, test_data, **kwargs
-    ):  # pylint: disable=too-many-return-statements
+    ):    # pylint: disable=too-many-return-statements
         """Compare app data equals tests data.
 
         Args:
@@ -256,9 +252,7 @@ class Validator:
         except NameError:
             return False, 'Encountered NameError when running deepdiff'
 
-        if ddiff:
-            return False, str(ddiff)
-        return True, ''
+        return (False, str(ddiff)) if ddiff else (True, '')
 
     def operator_eq(self, app_data, test_data):
         """Compare app data is equal to tests data.
@@ -320,9 +314,12 @@ class Validator:
         app_data = self._string_to_int_float(app_data)
         test_data = self._string_to_int_float(test_data)
         results = operator.ge(app_data, test_data)
-        details = ''
-        if not results:
-            details = f'{app_data} {type(app_data)} !(>=) {test_data} {type(test_data)}'
+        details = (
+            ''
+            if results
+            else f'{app_data} {type(app_data)} !(>=) {test_data} {type(test_data)}'
+        )
+
         return results, details
 
     def operator_gt(self, app_data, test_data):
@@ -343,9 +340,12 @@ class Validator:
         app_data = self._string_to_int_float(app_data)
         test_data = self._string_to_int_float(test_data)
         results = operator.gt(app_data, test_data)
-        details = ''
-        if not results:
-            details = f'{app_data} {type(app_data)} !(>) {test_data} {type(test_data)}'
+        details = (
+            ''
+            if results
+            else f'{app_data} {type(app_data)} !(>) {test_data} {type(test_data)}'
+        )
+
         return results, details
 
     def operator_is_date(self, app_data, test_data):  # pylint: disable=unused-argument
@@ -372,10 +372,7 @@ class Validator:
         """Check if data_list is None or if None exists in the data_list."""
         if not isinstance(data_list, list):
             data_list = [data_list]
-        for data in data_list:
-            if data is None:
-                return True
-        return False
+        return any(data is None for data in data_list)
 
     def operator_is_number(self, app_data, test_data):  # pylint: disable=unused-argument
         """Check if the app_data is a number."""
@@ -395,7 +392,7 @@ class Validator:
             passed = False
         return passed, ','.join(bad_data)
 
-    def operator_is_json(self, app_data, test_data):  # pylint: disable=unused-argument
+    def operator_is_json(self, app_data, test_data):    # pylint: disable=unused-argument
         """Check if the app_data is a json."""
         if self.check_null(app_data):
             return False, f'Invalid app_data: {app_data}. One or more values in app_data is null'
@@ -410,9 +407,12 @@ class Validator:
                     data = json.loads(data)
                     if not isinstance(data, list):
                         data = [data]
-                    for item in data:
-                        if not isinstance(item, dict):
-                            bad_data.append(f'Invalid JSON data provide ({item}).')
+                    bad_data.extend(
+                        f'Invalid JSON data provide ({item}).'
+                        for item in data
+                        if not isinstance(item, dict)
+                    )
+
                 except ValueError:
                     print('failed to load data')
                     bad_data.append(f'Invalid JSON data provide ({data}).')
@@ -424,9 +424,7 @@ class Validator:
             else:
                 bad_data.append(f'Invalid JSON data provide ({data}).')
 
-        if bad_data:
-            return False, ','.join(bad_data)
-        return True, ','.join(bad_data)
+        return (False, ','.join(bad_data)) if bad_data else (True, ','.join(bad_data))
 
     def operator_json_eq(self, app_data, test_data, **kwargs):
         """Compare app data equals tests data.
@@ -564,9 +562,12 @@ class Validator:
         app_data = self._string_to_int_float(app_data)
         test_data = self._string_to_int_float(test_data)
         results = operator.le(app_data, test_data)
-        details = ''
-        if not results:
-            details = f'{app_data} {type(app_data)} !(<=) {test_data} {type(test_data)}'
+        details = (
+            ''
+            if results
+            else f'{app_data} {type(app_data)} !(<=) {test_data} {type(test_data)}'
+        )
+
         return results, details
 
     @staticmethod
@@ -594,11 +595,7 @@ class Validator:
             )
             return False, msg
         app_len = len(app_data)
-        if isinstance(test_data, int):
-            test_len = test_data
-        else:
-            test_len = len(test_data)
-
+        test_len = test_data if isinstance(test_data, int) else len(test_data)
         results = operator.eq(app_len, test_len)
         return results, f'App Data Length: {app_len} | Test Data Length: {test_len}'
 
@@ -620,9 +617,12 @@ class Validator:
         app_data = self._string_to_int_float(app_data)
         test_data = self._string_to_int_float(test_data)
         results = operator.lt(app_data, test_data)
-        details = ''
-        if not results:
-            details = f'{app_data} {type(app_data)} !(<) {test_data} {type(test_data)}'
+        details = (
+            ''
+            if results
+            else f'{app_data} {type(app_data)} !(<) {test_data} {type(test_data)}'
+        )
+
         return results, details
 
     def operator_ne(self, app_data, test_data):
@@ -1075,8 +1075,7 @@ class ThreatConnect:
                     if result.get('valid'):
                         continue
                     name = result.get('name')
-                    batch_error = self._batch_error(name, batch_errors)
-                    if batch_error:
+                    if batch_error := self._batch_error(name, batch_errors):
                         self.log.data(
                             'validate',
                             'Batch Submission',
@@ -1103,17 +1102,20 @@ class ThreatConnect:
             m = re.search(error_regex, reason)
             if not m:
                 continue
-            if not m.group(1) in counts:
-                counts[m.group(1)] = 0
-            counts[m.group(1)] += 1
-        log_message = ''
-        for code, count in counts.items():
-            log_message += (
-                self.provider.tcex.batch(owner).error_codes.get(code, 'General Error')
+            if m[1] not in counts:
+                counts[m[1]] = 0
+            counts[m[1]] += 1
+        log_message = ''.join(
+            (
+                self.provider.tcex.batch(owner).error_codes.get(
+                    code, 'General Error'
+                )
                 + ': '
                 + str(count)
                 + '\n'
             )
+            for code, count in counts.items()
+        )
 
         self.log.data('validate', 'Batch Submission', log_message, 'error')
 
@@ -1127,12 +1129,11 @@ class ThreatConnect:
 
     def dir(self, directory, owner):
         """Validate the content of a given dir"""
-        results = []
-        for test_file in os.listdir(directory):
-            if not (test_file.endswith('.json') and test_file.startswith('validate_')):
-                continue
-            results.append(self.file(f'{directory}/{test_file}', owner))
-        return results
+        return [
+            self.file(f'{directory}/{test_file}', owner)
+            for test_file in os.listdir(directory)
+            if test_file.endswith('.json') and test_file.startswith('validate_')
+        ]
 
     def file(self, file, owner):
         """Validate the content of a given file"""
@@ -1142,17 +1143,16 @@ class ThreatConnect:
     def tc_entities(self, tc_entities, owner, files=None):
         """Validate a array of tc_entities"""
         results = []
-        if files:
-            if not len(tc_entities) == len(files):
-                return [
-                    {
-                        'valid': False,
-                        'errors': [
-                            'LengthError: Length of files provided does not '
-                            'match length of entities provided.'
-                        ],
-                    }
-                ]
+        if files and len(tc_entities) != len(files):
+            return [
+                {
+                    'valid': False,
+                    'errors': [
+                        'LengthError: Length of files provided does not '
+                        'match length of entities provided.'
+                    ],
+                }
+            ]
 
         for index, entity in enumerate(tc_entities):
             name = entity.get('name', entity.get('summary'))
@@ -1163,7 +1163,7 @@ class ThreatConnect:
             results.append({'name': name, 'valid': valid, 'errors': errors})
         return results
 
-    def tc_entity(self, tc_entity, owner, file=None):  # pylint: disable=unused-argument
+    def tc_entity(self, tc_entity, owner, file=None):    # pylint: disable=unused-argument
         """Validate the ti_response entity"""
         parameters = {'includes': ['additional', 'attributes', 'labels', 'tags']}
         ti_entity = self._convert_to_ti_entity(tc_entity, owner)
@@ -1203,7 +1203,7 @@ class ThreatConnect:
         if ti_entity.type == 'Indicator':
             provided_rating = tc_entity.get('rating', None)
             expected_rating = ti_response.get('rating', None)
-            if not provided_rating == expected_rating:
+            if provided_rating != expected_rating:
                 errors += (
                     f'RatingError: Provided rating {provided_rating} '
                     f'does not match actual rating {expected_rating}'
@@ -1211,7 +1211,7 @@ class ThreatConnect:
 
             provided_confidence = tc_entity.get('confidence', None)
             expected_confidence = ti_response.get('confidence', None)
-            if not provided_confidence == expected_confidence:
+            if provided_confidence != expected_confidence:
                 errors += (
                     f'ConfidenceError: Provided confidence {provided_confidence} '
                     f'does not match actual confidence {expected_confidence}'
@@ -1229,7 +1229,7 @@ class ThreatConnect:
         elif ti_entity.type == 'Group':
             provided_summary = tc_entity.get('name', None)
             expected_summary = ti_response_entity.get('value', None)
-            if not provided_summary == expected_summary:
+            if provided_summary != expected_summary:
                 errors += (
                     f'SummaryError: Provided summary {provided_summary} '
                     f'does not match actual summary {expected_summary}'
@@ -1256,29 +1256,29 @@ class ThreatConnect:
             if item in actual:
                 if isinstance(expected.get(item), list):
                     actual_list_string = [str(i) for i in actual.get(item, [])]
-                    for value in expected.get(item):
-                        if str(value) not in actual_list_string:
-                            errors.append(
-                                f'{error_type}{item} : {expected.get(item)} '
-                                f'did not match {item} : {actual.get(item)}'
-                            )
-                else:
-                    if str(expected.get(item)) != actual.get(item):
-                        errors.append(
-                            f'{error_type}{item} : {expected.get(item)} '
-                            f'did not match {item} : {actual.get(item)}'
-                        )
+                    errors.extend(
+                        f'{error_type}{item} : {expected.get(item)} '
+                        f'did not match {item} : {actual.get(item)}'
+                        for value in expected.get(item)
+                        if str(value) not in actual_list_string
+                    )
+
+                elif str(expected.get(item)) != actual.get(item):
+                    errors.append(
+                        f'{error_type}{item} : {expected.get(item)} '
+                        f'did not match {item} : {actual.get(item)}'
+                    )
                 actual.pop(item)
             else:
                 errors.append(
                     f'{error_type}{item} : {expected.get(item)} was '
                     f'in expected results but not in actual results.'
                 )
-        for item in list(actual.items()):
-            errors.append(
-                f'{error_type}{item} : {item} was in '
-                f'actual results but not in expected results.'
-            )
+        errors.extend(
+            f'{error_type}{item} : {item} was in '
+            f'actual results but not in expected results.'
+            for item in list(actual.items())
+        )
 
         return bool(errors), errors
 
@@ -1293,8 +1293,10 @@ class ThreatConnect:
                 errors.append(
                     f'{error_type}{item} was in expected results but not in actual results.'
                 )
-        for item in actual:
-            errors.append(f'{error_type}{item} was in actual results but not in expected results.')
+        errors.extend(
+            f'{error_type}{item} was in actual results but not in expected results.'
+            for item in actual
+        )
 
         return bool(errors), errors
 
@@ -1307,12 +1309,11 @@ class ThreatConnect:
 
     def _custom_indicators(self):
         indicator_details = self.provider.tcex.indicator_types_data
-        custom_indicators = []
-        for indicator in indicator_details.values():
-            if indicator.get('custom', False):
-                custom_indicators.append(indicator.get('name'))
-
-        return custom_indicators
+        return [
+            indicator.get('name')
+            for indicator in indicator_details.values()
+            if indicator.get('custom', False)
+        ]
 
     def _convert_to_ti_entity(self, tc_entity, owner):
         """Convert a tc_entity to a ti_entity"""
@@ -1344,10 +1345,6 @@ class ThreatConnect:
                 owner=owner,
                 unique_id=tc_entity.get('summary'),
             )
-        elif tc_entity.get('type').lower() == 'victim':
-            # TODO: Will need to do something similar to what was done to get the groups entity.
-            pass
-
         return ti_entity
 
     def _get_batch_submit_totals(self, batch_data_path):
@@ -1389,7 +1386,7 @@ class ThreatConnect:
         for key in data.keys():
             partitioned_sub_data = {}
             for sub_data in data.get(key):
-                if not sub_data.get('type') in partitioned_sub_data.keys():
+                if sub_data.get('type') not in partitioned_sub_data:
                     partitioned_sub_data[sub_data.get('type')] = [sub_data]
                 else:
                     partitioned_sub_data[sub_data.get('type')].append(sub_data)
@@ -1416,13 +1413,8 @@ class ThreatConnect:
         if not ti_response or not tc_entity:
             return True
 
-        expected = []
-        actual = []
-        for tag in tc_entity.get('tag', []):
-            expected.append(tag.get('name').lower())
-        for tag in ti_response.get('tag', []):
-            actual.append(tag.get('name').lower())
-
+        expected = [tag.get('name').lower() for tag in tc_entity.get('tag', [])]
+        actual = [tag.get('name').lower() for tag in ti_response.get('tag', [])]
         return self.compare_lists(expected, actual, error_type='TagError: ')
 
     def _response_labels(self, ti_response, tc_entity):
@@ -1430,13 +1422,8 @@ class ThreatConnect:
         if not ti_response or not tc_entity:
             return True
 
-        expected = []
-        actual = []
-        for tag in tc_entity.get('securityLabel', []):
-            expected.append(tag.get('name'))
-        for tag in ti_response.get('securityLabel', []):
-            actual.append(tag.get('name'))
-
+        expected = [tag.get('name') for tag in tc_entity.get('securityLabel', [])]
+        actual = [tag.get('name') for tag in ti_response.get('securityLabel', [])]
         return self.compare_lists(expected, actual, error_type='SecurityLabelError: ')
 
     @staticmethod
@@ -1446,7 +1433,7 @@ class ThreatConnect:
             return True, []
 
         errors = []
-        if ti_entity.api_sub_type == 'Document' or ti_entity.api_sub_type == 'Report':
+        if ti_entity.api_sub_type in ['Document', 'Report']:
             actual_hash = ti_entity.get_file_hash()
             actual_hash = actual_hash.hexdigest()
             provided_hash = hashlib.sha256()
@@ -1454,7 +1441,7 @@ class ThreatConnect:
                 for byte_block in iter(lambda: f.read(4096), b''):
                     provided_hash.update(byte_block)
             provided_hash = provided_hash.hexdigest()
-            if not provided_hash == actual_hash:
+            if provided_hash != actual_hash:
                 errors.append(
                     f'sha256 {provided_hash} of provided file did not '
                     f'match sha256 of actual file {actual_hash}'

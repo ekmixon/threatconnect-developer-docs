@@ -198,7 +198,7 @@ class CaseManagement:
         r = obj.submit()
         data = {'status_code': r.status_code}
         if r.ok:
-            data.update(r.json().get('data', {}))
+            data |= r.json().get('data', {})
             data['main_type'] = 'Case_Management'
             data['sub_type'] = entity_type
             data['owner'] = owner

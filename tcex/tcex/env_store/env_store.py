@@ -134,7 +134,11 @@ class EnvStore:
     @property
     def vault_client(self):
         """Return configured vault client."""
-        if self._vault_client is None and 'hvac' in sys.modules:
-            if self.vault_addr is not None and self.vault_token is not None:
-                self._vault_client = hvac.Client(url=self.vault_addr, token=self.vault_token)
+        if (
+            self._vault_client is None
+            and 'hvac' in sys.modules
+            and self.vault_addr is not None
+            and self.vault_token is not None
+        ):
+            self._vault_client = hvac.Client(url=self.vault_addr, token=self.vault_token)
         return self._vault_client

@@ -131,16 +131,14 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         params = []
         for name, value in parse_qs(url_parts.query).items():
             if isinstance(value, list):
-                for v in value:
-                    params.append({'name': name, 'value': v})
+                params.extend({'name': name, 'value': v} for v in value)
             else:
                 params.append({'name': name, 'value': value})
 
         # forward request to service
         request_key = str(uuid4())
 
-        content_length = int(self.headers.get('content-length', 0))
-        if content_length:
+        if content_length := int(self.headers.get('content-length', 0)):
             body = self.rfile.read(content_length)
             self.server.test_case.redis_client.hset(request_key, 'request.body', body)
 

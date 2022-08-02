@@ -145,8 +145,7 @@ class Utils:
         flat_list = []
         for sublist in lst:
             if isinstance(sublist, list):
-                for item in Utils.flatten_list(sublist):
-                    flat_list.append(item)
+                flat_list.extend(iter(Utils.flatten_list(sublist)))
             else:
                 flat_list.append(sublist)
 
@@ -320,7 +319,7 @@ class Utils:
                 # set static filename so that when running a large job App thousands of files do
                 # no get created.
                 body_data = '--data-binary @/tmp/body-file'
-                if write_file is True:
+                if write_file:
                     temp_file: str = self.write_temp_binary_file(content=body, filename='curl-body')
                     body_data = f'--data-binary @{temp_file}'
             cmd.append(body_data)
@@ -387,7 +386,7 @@ class Utils:
         Returns:
             bool: The boolean value
         """
-        return str(value).lower() in ['1', 't', 'true', 'y', 'yes']
+        return str(value).lower() in {'1', 't', 'true', 'y', 'yes'}
 
     @staticmethod
     def truncate_string(
@@ -425,11 +424,10 @@ class Utils:
         if len(append_chars) > length:  # pragma: no cover
             raise RuntimeError('Append chars cannot exceed the truncation length.')
 
-        output = t_string[0 : length - len(append_chars)]  # noqa: E203
-        if spaces is True:
-            if not output.endswith(' '):
-                # split output on spaces and drop last item to terminate string on word
-                output = ' '.join(output.split(' ')[:-1])
+        output = t_string[:length - len(append_chars)]
+        if spaces is True and not output.endswith(' '):
+            # split output on spaces and drop last item to terminate string on word
+            output = ' '.join(output.split(' ')[:-1])
 
         return f'{output.rstrip()}{append_chars}'
 
@@ -449,8 +447,8 @@ class Utils:
             variable = variable.strip()
             if re.match(self.variable_match, variable):
                 var = re.search(self.variable_parse, variable)
-                variable_name = var.group(3).replace('.', '_').lower()
-                variable_type = var.group(4).lower()
+                variable_name = var[3].replace('.', '_').lower()
+                variable_type = var[4].lower()
                 method_name = f'{variable_name}_{variable_type}'
         return method_name
 
@@ -518,22 +516,23 @@ class Utils:
                         for item in value:
                             if isinstance(item, dict):
                                 new_list.append(list(self.mapper(d, item))[0])
-                            else:
-                                if not item.startswith('@'):
-                                    new_list.append(item)
-                                else:
-                                    new_list.append(
-                                        jmespath.search(f'{item}', jmespath.search('@', d))
-                                    )
+                            elif item.startswith('@'):
+                                new_list.append(
+                                    jmespath.search(f'{item}', jmespath.search('@', d))
+                                )
 
+                            else:
+                                new_list.append(item)
                         mapped_obj[key] = new_list
                     elif isinstance(value, dict):
                         mapped_obj[key] = list(self.mapper(d, mapped_obj[key]))[0]
                     else:
-                        if not value.startswith('@'):
-                            mapped_obj[key] = value
-                        else:
-                            mapped_obj[key] = jmespath.search(f'{value}', jmespath.search('@', d))
+                        mapped_obj[key] = (
+                            jmespath.search(f'{value}', jmespath.search('@', d))
+                            if value.startswith('@')
+                            else value
+                        )
+
                 yield mapped_obj
         except Exception:  # nosec
             pass

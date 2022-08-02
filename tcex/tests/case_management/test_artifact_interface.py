@@ -716,8 +716,6 @@ class TestArtifact(TestCaseManagement):
         artifacts.filter.tql('Invalid TQL')
 
         try:
-            for artifact in artifacts:  # pylint: disable=unused-variable
-                pass
             assert False, 'TQL should have failed'
         except Exception:
             pass

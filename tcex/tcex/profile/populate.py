@@ -89,9 +89,7 @@ class Populate:
             for m in re.finditer(r'\${tcenv:' + str(key) + r':(.*?)}', profile):
                 try:
                     full_match = m.group(0)
-                    jmespath_expression = m.group(1)
-
-                    if jmespath_expression:
+                    if jmespath_expression := m.group(1):
                         value = jmespath.search(jmespath_expression, data_value)
                         profile = profile.replace(full_match, str(value))
                 except IndexError:

@@ -83,7 +83,7 @@ class Profile:
     def _flatten_inputs(inputs):
         """Flatten the inputs dict."""
         inputs_flattened = dict(inputs.get('defaults', {}))
-        inputs_flattened.update(inputs.get('optional', {}))
+        inputs_flattened |= inputs.get('optional', {})
         inputs_flattened.update(inputs.get('required', {}))
         return inputs_flattened
 
@@ -224,8 +224,7 @@ class Profile:
         Args:
             context (str): The context (session_id) to clear in KV store.
         """
-        keys = self.redis_client.hkeys(context)
-        if keys:
+        if keys := self.redis_client.hkeys(context):
             return self.redis_client.hdel(context, *keys)
         return 0
 
@@ -241,11 +240,10 @@ class Profile:
     @property
     def context_tracker(self):
         """Return the current context trackers for Service Apps."""
-        if not self._context_tracker:
-            if self.tcex_testing_context:
-                self._context_tracker = json.loads(
-                    self.redis_client.hget(self.tcex_testing_context, '_context_tracker') or '[]'
-                )
+        if not self._context_tracker and self.tcex_testing_context:
+            self._context_tracker = json.loads(
+                self.redis_client.hget(self.tcex_testing_context, '_context_tracker') or '[]'
+            )
         return self._context_tracker
 
     @property
@@ -325,9 +323,10 @@ class Profile:
                     continue
 
                 # each non hidden input will be checked for permutations if the App has layout
-                if not data.get('hidden'):
-                    if not self.permutations.validate_input_variable(name, inputs):
-                        continue
+                if not data.get(
+                    'hidden'
+                ) and not self.permutations.validate_input_variable(name, inputs):
+                    continue
 
                 # get the value from the current profile or use default value from install.json
                 value = profile_inputs_flattened.get(name)
@@ -343,9 +342,10 @@ class Profile:
                     input_type = 'required'
 
                 # APP-87 - ensure boolean inputs don't have null values
-                if data.get('type').lower() == 'boolean':
-                    if not isinstance(value, bool):
-                        value = False
+                if data.get('type').lower() == 'boolean' and not isinstance(
+                    value, bool
+                ):
+                    value = False
 
                 # update inputs for next permutation check
                 inputs[name] = value
@@ -379,7 +379,7 @@ class Profile:
         """Return partially parsed test case data."""
         if self._name is None:
             name_pattern = r'^test_[a-zA-Z0-9_]+\[(.+)\]$'
-            self._name = re.search(name_pattern, self._test_case_data[-1]).group(1)
+            self._name = re.search(name_pattern, self._test_case_data[-1])[1]
         return self._name
 
     @name.setter
@@ -461,13 +461,9 @@ class Profile:
             if self.lj.has_layout:
                 # using inputs from layout.json since they are required to be in order
                 # (display field can only use inputs previously defined)
-                params = {}
-                for name in self.lj.params_dict:
-                    # get data from install.json based on name
-                    params[name] = self.ij.params_dict.get(name)
-
+                params = {name: self.ij.params_dict.get(name) for name in self.lj.params_dict}
                 # hidden fields will not be in layout.json so they need to be included manually
-                params.update(self.ij.filter_params_dict(hidden=True))
+                params |= self.ij.filter_params_dict(hidden=True)
 
             yield profile_inputs, params
 
@@ -582,9 +578,9 @@ class Profile:
             profile_data['outputs'] = outputs
             self.write(profile_data)
         elif self.pytest_args.get('merge_outputs'):
+            # service Apps have a different structure with id: data
+            merged_outputs = {}
             if trigger_id is not None:
-                # service Apps have a different structure with id: data
-                merged_outputs = {}
                 for id_, data in outputs.items():
                     merged_outputs[id_] = {}
                     for key in list(data):
@@ -594,8 +590,6 @@ class Profile:
                         else:
                             merged_outputs[id_][key] = outputs[id_][key]
             else:
-                # update playbook App profile outputs
-                merged_outputs = {}
                 for key in list(outputs):
                     if key in self.outputs:
                         # use current profile output value if exists
@@ -681,28 +675,28 @@ class Profile:
                     # inputs that are serviceConfig are not applicable for profiles
                     continue
 
-                if not data.get('hidden'):
-                    # each non hidden input will be checked for permutations if the App has layout
-                    if not self.permutations.validate_input_variable(name, inputs):
-                        continue
+                if not data.get(
+                    'hidden'
+                ) and not self.permutations.validate_input_variable(name, inputs):
+                    continue
 
                 # get the value from the current profile or use default value from install.json
                 value = profile_inputs_flattened.get(name)
                 if name not in profile_inputs_flattened:
                     value = data.get('default', None)
 
-                if data.get('required'):
-                    if value in [None, '']:  # exclude 0 or False from check
-                        # validation step
-                        errors.append(f'- Missing/Invalid value for required arg ({name})')
-                        status = False
+                if data.get('required') and value in [None, '']:
+                    # validation step
+                    errors.append(f'- Missing/Invalid value for required arg ({name})')
+                    status = False
 
                 # APP-87 - ensure boolean inputs don't have null values
-                if data.get('type').lower() == 'boolean':
-                    if not isinstance(value, bool):
-                        # validation step
-                        errors.append(f'- Invalid value for boolean arg ({name})')
-                        status = False
+                if data.get('type').lower() == 'boolean' and not isinstance(
+                    value, bool
+                ):
+                    # validation step
+                    errors.append(f'- Invalid value for boolean arg ({name})')
+                    status = False
 
                 # update inputs
                 inputs[name] = value
@@ -816,10 +810,11 @@ class Profile:
         """Return combined/flattened args with value from staging data if required."""
         rargs = {}
         for arg, value in self.args.items():
-            if re.match(self.utils.variable_match, value):
-                # look for value in staging data
-                if self.stage_kvstore.get(value) is not None:
-                    value = self.stage_kvstore.get(value)
+            if (
+                re.match(self.utils.variable_match, value)
+                and self.stage_kvstore.get(value) is not None
+            ):
+                value = self.stage_kvstore.get(value)
             rargs[arg] = value
         return rargs
 
@@ -843,47 +838,56 @@ class Profile:
     @property
     def tc_in_path(self):
         """Return fqpn tc_in_path arg relative to profile."""
-        if self.ij.runtime_level.lower() in [
-            'apiservice',
-            'triggerservice',
-            'webhooktriggerservice',
-        ]:
-            tc_in_path = os.path.join(self._default_args.get('tc_in_path'), self.feature)
-        else:
-            tc_in_path = os.path.join(
-                self._default_args.get('tc_in_path'), self.feature, self._test_case_name
+        return (
+            os.path.join(self._default_args.get('tc_in_path'), self.feature)
+            if self.ij.runtime_level.lower()
+            in [
+                'apiservice',
+                'triggerservice',
+                'webhooktriggerservice',
+            ]
+            else os.path.join(
+                self._default_args.get('tc_in_path'),
+                self.feature,
+                self._test_case_name,
             )
-        return tc_in_path
+        )
 
     @property
     def tc_log_path(self):
         """Return fqpn tc_log_path arg relative to profile."""
-        if self.ij.runtime_level.lower() in [
-            'apiservice',
-            'triggerservice',
-            'webhooktriggerservice',
-        ]:
-            tc_log_path = os.path.join(self._default_args.get('tc_log_path'), self.feature)
-        else:
-            tc_log_path = os.path.join(
-                self._default_args.get('tc_log_path'), self.feature, self._test_case_name
+        return (
+            os.path.join(self._default_args.get('tc_log_path'), self.feature)
+            if self.ij.runtime_level.lower()
+            in [
+                'apiservice',
+                'triggerservice',
+                'webhooktriggerservice',
+            ]
+            else os.path.join(
+                self._default_args.get('tc_log_path'),
+                self.feature,
+                self._test_case_name,
             )
-        return tc_log_path
+        )
 
     @property
     def tc_out_path(self):
         """Return fqpn tc_out_path arg relative to profile."""
-        if self.ij.runtime_level.lower() in [
-            'apiservice',
-            'triggerservice',
-            'webhooktriggerservice',
-        ]:
-            tc_out_path = os.path.join(self._default_args.get('tc_out_path'), self.feature)
-        else:
-            tc_out_path = os.path.join(
-                self._default_args.get('tc_out_path'), self.feature, self._test_case_name
+        return (
+            os.path.join(self._default_args.get('tc_out_path'), self.feature)
+            if self.ij.runtime_level.lower()
+            in [
+                'apiservice',
+                'triggerservice',
+                'webhooktriggerservice',
+            ]
+            else os.path.join(
+                self._default_args.get('tc_out_path'),
+                self.feature,
+                self._test_case_name,
             )
-        return tc_out_path
+        )
 
     @property
     def tc_playbook_out_variables(self):
@@ -928,17 +932,20 @@ class Profile:
     @property
     def tc_temp_path(self):
         """Return fqpn tc_temp_path arg relative to profile."""
-        if self.ij.runtime_level.lower() in [
-            'apiservice',
-            'triggerservice',
-            'webhooktriggerservice',
-        ]:
-            tc_temp_path = os.path.join(self._default_args.get('tc_temp_path'), self.feature)
-        else:
-            tc_temp_path = os.path.join(
-                self._default_args.get('tc_temp_path'), self.feature, self._test_case_name
+        return (
+            os.path.join(self._default_args.get('tc_temp_path'), self.feature)
+            if self.ij.runtime_level.lower()
+            in [
+                'apiservice',
+                'triggerservice',
+                'webhooktriggerservice',
+            ]
+            else os.path.join(
+                self._default_args.get('tc_temp_path'),
+                self.feature,
+                self._test_case_name,
             )
-        return tc_temp_path
+        )
 
     @property
     def validation_criteria(self):

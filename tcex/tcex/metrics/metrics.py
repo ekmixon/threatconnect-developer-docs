@@ -85,9 +85,7 @@ class Metrics:
             }
         """
         params = {'resultLimit': 50, 'resultStart': 0}
-        while True:
-            if params.get('resultStart') >= params.get('resultLimit'):
-                break
+        while not params.get('resultStart') >= params.get('resultLimit'):
             r = self.tcex.session.get('/v2/customMetrics', params=params)
             if not r.ok:  # pragma: no cover
                 self.tcex.handle_error(705, [r.status_code, r.text])
@@ -132,17 +130,12 @@ class Metrics:
             body['weight'] = weight
         self.tcex.log.debug(f'metric data: {body}')
 
-        params = {}
-        if return_value:
-            params = {'returnValue': 'true'}
-
+        params = {'returnValue': 'true'} if return_value else {}
         url = f'/v2/customMetrics/{self._metric_id}/data'
         r = self.tcex.session.post(url, json=body, params=params)
         if r.status_code == 200 and 'application/json' in r.headers.get('content-type', ''):
             data = r.json()
-        elif r.status_code == 204:
-            pass
-        else:  # pragma: no cover
+        elif r.status_code != 204:  # pragma: no cover
             self.tcex.handle_error(710, [r.status_code, r.text])
 
         return data

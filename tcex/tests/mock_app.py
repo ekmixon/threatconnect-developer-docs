@@ -278,7 +278,7 @@ class MockApp:
 
         if boolean:
             # convert string response to boolean
-            cv = str(cv).lower() in ['true']
+            cv = str(cv).lower() in {'true'}
         return cv
 
     @property

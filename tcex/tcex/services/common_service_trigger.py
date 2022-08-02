@@ -92,7 +92,7 @@ class CommonServiceTrigger(CommonService):
             logfile: The CreateConfig logfile to return in response ack.
         """
         try:
-            if status is not True and self.configs.get(str(trigger_id)) is not None:
+            if not status and self.configs.get(str(trigger_id)) is not None:
                 # add config to configs
                 del self.configs[str(trigger_id)]
 
@@ -102,17 +102,20 @@ class CommonServiceTrigger(CommonService):
                     {
                         'command': 'Acknowledged',
                         'logFile': os.path.join(
-                            os.path.basename(os.path.dirname(self.trigger_logfile)),
+                            os.path.basename(
+                                os.path.dirname(self.trigger_logfile)
+                            ),
                             os.path.basename(self.trigger_logfile),
                         ),
                         'message': message,
-                        'status': 'Success' if status is True else 'Failed',
+                        'status': 'Success' if status else 'Failed',
                         'type': 'CreateConfig',
                         'triggerId': trigger_id,
                     }
                 ),
                 self.args.tc_svc_client_topic,
             )
+
         except Exception as e:
             self.log.error(
                 'feature=service, event=create-config-callback-exception, '

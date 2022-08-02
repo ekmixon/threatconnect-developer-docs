@@ -211,13 +211,7 @@ class Batch:
         if store is False:
             return group_data
 
-        if isinstance(group_data, dict):
-            # get xid from dict
-            xid = group_data.get('xid')
-        else:
-            # get xid from object
-            xid = group_data.xid
-
+        xid = group_data.get('xid') if isinstance(group_data, dict) else group_data.xid
         if self.groups.get(xid) is not None:
             # return existing group from memory
             group_data = self.groups.get(xid)
@@ -273,13 +267,8 @@ class Batch:
             list: The list of indicators split on " : ".
         """
         indicator_list = [indicator]
-        if indicator.count(' : ') > 0:
-            # handle all multi-valued indicators types (file hashes and custom indicators)
-            indicator_list = []
-
-            # group 1 - lazy capture everything to first <space>:<space> or end of line
-            iregx_pattern = r'^(.*?(?=\s\:\s|$))?'
-            iregx_pattern += r'(?:\s\:\s)?'  # remove <space>:<space>
+        if ' : ' in indicator:
+            iregx_pattern = r'^(.*?(?=\s\:\s|$))?' + r'(?:\s\:\s)?'
             # group 2 - look behind for <space>:<space>, lazy capture everything
             #           to look ahead (optional <space>):<space> or end of line
             iregx_pattern += r'((?<=\s\:\s).*?(?=(?:\s)?\:\s|$))?'
@@ -290,9 +279,7 @@ class Batch:
             iregx = re.compile(iregx_pattern)
 
             indicators = iregx.search(indicator)
-            if indicators is not None:
-                indicator_list = list(indicators.groups())
-
+            indicator_list = list(indicators.groups()) if indicators is not None else []
         return indicator_list
 
     @property
@@ -380,12 +367,8 @@ class Batch:
             Union[dict, object]: The new group dict/object or the previously stored dict/object.
         """
         if indicator_data.get('type') not in ['Address', 'EmailAddress', 'File', 'Host', 'URL']:
-            # for custom indicator types the valueX fields are required.
-            # using the summary we can build the values
-            index = 1
-            for value in self._indicator_values(indicator_data.get('summary')):
+            for index, value in enumerate(self._indicator_values(indicator_data.get('summary')), start=1):
                 indicator_data[f'value{index}'] = value
-                index += 1
         if indicator_data.get('type') == 'File':
             # convert custom field name to the appropriate value for batch v2
             size = indicator_data.pop('size', None)
@@ -1191,14 +1174,14 @@ class Batch:
         if self.halt_on_poll_error is not None:
             halt_on_error = self.halt_on_poll_error
 
-        # initial poll interval
-        if self._poll_interval is None and self._batch_data_count is not None:
-            # calculate poll_interval base off the number of entries in the batch data
-            # with a minimum value of 5 seconds.
-            self._poll_interval = max(math.ceil(self._batch_data_count / 300), 5)
-        elif self._poll_interval is None:
-            # if not able to calculate poll_interval default to 15 seconds
-            self._poll_interval = 15
+        if self._poll_interval is None:
+            if self._batch_data_count is not None:
+                # calculate poll_interval base off the number of entries in the batch data
+                # with a minimum value of 5 seconds.
+                self._poll_interval = max(math.ceil(self._batch_data_count / 300), 5)
+            else:
+                # if not able to calculate poll_interval default to 15 seconds
+                self._poll_interval = 15
 
         # poll retry back_off factor
         poll_interval_back_off = float(2.5 if back_off is None else back_off)
@@ -1207,10 +1190,7 @@ class Batch:
         poll_retry_seconds = int(5 if retry_seconds is None else retry_seconds)
 
         # poll timeout
-        if timeout is None:
-            timeout = self.poll_timeout
-        else:
-            timeout = int(timeout)
+        timeout = self.poll_timeout if timeout is None else int(timeout)
         params = {'includeAdditional': 'true'}
 
         poll_count = 0
@@ -1276,7 +1256,7 @@ class Batch:
     @poll_timeout.setter
     def poll_timeout(self, seconds: int):
         """Set the poll timeout value."""
-        self._poll_timeout = int(seconds)
+        self._poll_timeout = seconds
 
     def process_all(self, process_files: Optional[bool] = True) -> None:
         """Process Batch request to ThreatConnect API.
@@ -1476,12 +1456,13 @@ class Batch:
         """Return previously saved xids."""
         if self._saved_xids is None:
             self._saved_xids = []
-            if self.debug:
-                if os.path.isfile(self.debug_path_xids) and os.access(
-                    self.debug_path_xids, os.R_OK
-                ):
-                    with open(self.debug_path_xids) as fh:
-                        self._saved_xids = fh.read().splitlines()
+            if (
+                self.debug
+                and os.path.isfile(self.debug_path_xids)
+                and os.access(self.debug_path_xids, os.R_OK)
+            ):
+                with open(self.debug_path_xids) as fh:
+                    self._saved_xids = fh.read().splitlines()
         return self._saved_xids
 
     @saved_xids.setter
@@ -1743,10 +1724,7 @@ class Batch:
             bool: False when there is not data to process, else True
         """
         # user provided content or grab content from local group/indicator lists
-        if content is not None:
-            # process content
-            pass
-        else:
+        if content is None:
             content = self.data
         file_data = content.pop('file', {})
 

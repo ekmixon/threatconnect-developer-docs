@@ -46,7 +46,7 @@ class RotatingFileHandlerCustom(RotatingFileHandler):
         Args:
             name: The current name of the logfile.
         """
-        return name + '.gz'
+        return f'{name}.gz'
 
     @staticmethod
     def custom_gzip_rotator(source: str, dest: str) -> None:

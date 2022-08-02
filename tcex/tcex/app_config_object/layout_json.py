@@ -28,10 +28,7 @@ class LayoutJson:
     @staticmethod
     def _to_bool(value):
         """Convert string value to bool."""
-        bool_value = False
-        if str(value).lower() in ['1', 'true']:
-            bool_value = True
-        return bool_value
+        return str(value).lower() in {'1', 'true'}
 
     @property
     def contents(self):
@@ -95,9 +92,7 @@ class LayoutJson:
     @property
     def has_layout(self):
         """Return True if App has layout.json file."""
-        if os.path.isfile(self.filename):
-            return True
-        return False
+        return bool(os.path.isfile(self.filename))
 
     @property
     def params_dict(self):

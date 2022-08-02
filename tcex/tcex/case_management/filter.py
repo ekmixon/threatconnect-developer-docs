@@ -19,13 +19,11 @@ class Filter:
     @property
     def implemented_keywords(self):
         """Return implemented TQL keywords."""
-        keywords = []
-        for prop in dir(self):
-            if prop.startswith('_') or prop in ['tql']:
-                continue
-            keywords.append(prop)
-
-        return keywords
+        return [
+            prop
+            for prop in dir(self)
+            if not prop.startswith('_') and prop not in ['tql']
+        ]
 
     @property
     def keywords(self):

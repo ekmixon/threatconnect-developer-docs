@@ -282,11 +282,13 @@ class Interactive:
             str: The input str from the user.
         """
         input_value: str = self._input_value('Input', kwargs.get('option_text'))
-        if not input_value:
-            # if no default value and required force user to input again
-            if kwargs.get('default') is None and kwargs.get('required') is True:
-                self.print_required()
-                return self.collect_binary(**kwargs)
+        if (
+            not input_value
+            and kwargs.get('default') is None
+            and kwargs.get('required') is True
+        ):
+            self.print_required()
+            return self.collect_binary(**kwargs)
 
         if input_value not in [None, '']:
             input_data: str = b64encode(input_value.encode()).decode()
@@ -544,13 +546,7 @@ class Interactive:
             required = False
 
         input_values = list(set(input_values))
-        if input_values:
-            # format multichoice value as pipe delimited string
-            input_values = '|'.join(input_values)
-        else:
-            # return None to ensure data doesn't get added to inputs
-            input_values = None
-
+        input_values = '|'.join(input_values) if input_values else None
         # print user feedback
         self.print_feedback(input_values)
 
@@ -623,8 +619,7 @@ class Interactive:
             str: The user provided input.
         """
         input_value = None
-        id_ = self._input_value('ID')
-        if id_:
+        if id_ := self._input_value('ID'):
             value = self._input_value('Value')
             type_ = self._input_value('Type')
             input_value = {'id': id_, 'value': value, 'type': type_}
@@ -685,11 +680,9 @@ class Interactive:
                     yield name, data
 
                 # hidden fields will not be in layout.json so they need to be include manually
-                for name, data in self.profile.ij.filter_params_dict(hidden=True).items():
-                    yield name, data
+                yield from self.profile.ij.filter_params_dict(hidden=True).items()
             else:
-                for name, data in self.profile.ij.params_dict.items():
-                    yield name, data
+                yield from self.profile.ij.params_dict.items()
 
         inputs = {}
         for name, data in params_data():
@@ -697,10 +690,12 @@ class Interactive:
                 # inputs that are serviceConfig are not applicable for profiles
                 continue
 
-            if not data.get('hidden'):
-                # each input will be checked for permutations if the App has layout and not hidden
-                if not self.profile.permutations.validate_input_variable(name, inputs):
-                    continue
+            if not data.get(
+                'hidden'
+            ) and not self.profile.permutations.validate_input_variable(
+                name, inputs
+            ):
+                continue
 
             # present the input
             value: str = self.input_type_map.get(data.get('type').lower())(name, data)
@@ -770,7 +765,7 @@ class Interactive:
             except ValueError:
                 # if "magic" variable (e.g., ${GROUP_TYPES}) was not expanded then use index 0.
                 # there is no way to tell if the default value is be part of the expansion.
-                if any([re.match(r'^\${.*}$', v) for v in valid_values]):
+                if any(re.match(r'^\${.*}$', v) for v in valid_values):
                     option_index = 0
                 else:
                     print(
@@ -781,10 +776,7 @@ class Interactive:
         option_text = f'[{option_index}]'
 
         # build options list to display to the user in two columns
-        options = []
-        for i, v in enumerate(valid_values):
-            options.append(f'{i}. {v}')
-
+        options = [f'{i}. {v}' for i, v in enumerate(valid_values)]
         # display options list into two columns
         left, right = self._split_list(options)
         for i, _ in enumerate(left):
@@ -832,10 +824,7 @@ class Interactive:
             data_types.insert(0, self._no_selection_text)
 
         # build options list to display to the user in two columns
-        options = []
-        for i, v in enumerate(data_types):
-            options.append(f'{i}. {v}')
-
+        options = [f'{i}. {v}' for i, v in enumerate(data_types)]
         left, right = self._split_list(options)
         for i, _ in enumerate(left):
             ld = left[i]
@@ -900,7 +889,7 @@ class Interactive:
 
         # user feedback
         feedback_data = input_data
-        if input_data is not None:
+        if feedback_data is not None:
             feedback_data = json.dumps(feedback_data)
 
         # # update default
@@ -939,7 +928,7 @@ class Interactive:
                 except ValueError:
                     # if "magic" variable (e.g., ${GROUP_TYPES}) was not expanded then skip value.
                     # there is no way to tell if the default value is be part of the expansion.
-                    if any([re.match(r'^\${.*}$', v) for v in valid_values]):
+                    if any(re.match(r'^\${.*}$', v) for v in valid_values):
                         continue
 
                     print(
@@ -950,10 +939,7 @@ class Interactive:
         option_text = f''' [{','.join([str(v) for v in option_indexes])}]'''
 
         # build options list to display to the user in two columns
-        options = []
-        for i, v in enumerate(valid_values):
-            options.append(f'{i}. {v}')
-
+        options = [f'{i}. {v}' for i, v in enumerate(valid_values)]
         # display options list into two columns
         left, right = self._split_list(options)
         for i, _ in enumerate(left):
@@ -1006,10 +992,7 @@ class Interactive:
         # the default value from install.json or user_data
         default = self._default(data)
 
-        option_text = ''
-        if default is not None:
-            option_text = f'[{default}]'
-
+        option_text = f'[{default}]' if default is not None else ''
         # use data_type to properly format collection input
         input_value = self.collect_type_map[data_type](
             default=default, option_text=option_text, required=data.get('required', False)

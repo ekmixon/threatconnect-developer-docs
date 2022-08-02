@@ -98,9 +98,10 @@ def to_bool():
     """
 
     def _validator(value, arg_name, label):  # pylint: disable=unused-argument
-        if not isinstance(value, list):
-            return Utils.to_bool(value)
-
-        return list([Utils.to_bool(v) for v in value])
+        return (
+            [Utils.to_bool(v) for v in value]
+            if isinstance(value, list)
+            else Utils.to_bool(value)
+        )
 
     return _validator

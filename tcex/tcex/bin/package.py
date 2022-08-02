@@ -69,24 +69,25 @@ class Package(Bin):
         Args:
             bundle_name (str): The output name of the bundle zip file.
         """
-        if self.args.bundle or self.tj.package_bundle:
-            if self.tj.package_bundle_packages:
-                for bundle in self.tj.package_bundle_packages:
-                    bundle_name = bundle.get('name')
-                    bundle_patterns = bundle.get('patterns')
+        if not self.args.bundle and not self.tj.package_bundle:
+            return
+        if self.tj.package_bundle_packages:
+            for bundle in self.tj.package_bundle_packages:
+                bundle_name = bundle.get('name')
+                bundle_patterns = bundle.get('patterns')
 
-                    bundle_apps = []
-                    for app in self._app_packages:
-                        for app_pattern in bundle_patterns:
-                            p = re.compile(app_pattern, re.IGNORECASE)
-                            if p.match(app):
-                                bundle_apps.append(app)
+                bundle_apps = []
+                for app in self._app_packages:
+                    for app_pattern in bundle_patterns:
+                        p = re.compile(app_pattern, re.IGNORECASE)
+                        if p.match(app):
+                            bundle_apps.append(app)
 
-                    # bundle app in zip
-                    if bundle_apps:
-                        self.bundle_apps(bundle_name, bundle_apps)
-            else:
-                self.bundle_apps(bundle_name, self._app_packages)
+                # bundle app in zip
+                if bundle_apps:
+                    self.bundle_apps(bundle_name, bundle_apps)
+        else:
+            self.bundle_apps(bundle_name, self._app_packages)
 
     def bundle_apps(self, bundle_name, bundle_apps):
         """Bundle multiple Job or Playbook Apps (.tcx files) into a single zip file.

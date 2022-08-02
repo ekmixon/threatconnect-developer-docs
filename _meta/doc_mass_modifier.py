@@ -20,10 +20,10 @@ def update_emphasized_lines(file_text, delta):
 
         # increment them appropriately
         for match in matches:
-            emphasis_intervals = list()
+            emphasis_intervals = []
 
             for range_ in match.split(","):
-                new_nums = list()
+                new_nums = []
 
                 for num in range_.split("-"):
                     if int(num) > 3:
@@ -41,6 +41,10 @@ def update_emphasized_lines(file_text, delta):
 
 
 # iterate through the docs
+# find something in the current file
+pattern = "# instantiate (.*) object"
+expected_matches = 1
+
 for path, dirs, files in os.walk("../docs/".format(docs_lang)):
     # iterate through the files
     for file_ in files:
@@ -51,17 +55,13 @@ for path, dirs, files in os.walk("../docs/".format(docs_lang)):
         with open(full_file_path, 'r') as f:
             file_text = f.read()
 
-        # find something in the current file
-        pattern = "# instantiate (.*) object"
         matches = re.findall(pattern, file_text)
-        expected_matches = 1
-
         if not matches:  # if there are no matches, move on
             pass
         elif len(matches) == expected_matches:  # if the number of matches is expected, make appropriate changes
             if not test_run:
                 # replace the matched content with something else
-                file_text = re.sub(pattern, "# instantiate some {}".format(matches[0]), file_text)
+                file_text = re.sub(pattern, f"# instantiate some {matches[0]}", file_text)
 
                 file_text = update_emphasized_lines("", 0)
 
@@ -69,6 +69,6 @@ for path, dirs, files in os.walk("../docs/".format(docs_lang)):
                 with open(full_file_path, 'w') as f:
                     f.write(file_text)
             else:
-                print("Would make change in {}: {}".format(full_file_path, matches))
+                print(f"Would make change in {full_file_path}: {matches}")
         else:  # if the number of matches is unexpected, print a warning
-            print("{} matches found in {}".format(len(matches), full_file_path))
+            print(f"{len(matches)} matches found in {full_file_path}")

@@ -72,9 +72,7 @@ class Lib(Bin):
             trusted_hosts = ['pypi.org', 'pypi.python.org', 'files.pythonhosted.org']
 
             for host in trusted_hosts:
-                exe_command.append('--trusted-host')
-                exe_command.append(host)
-
+                exe_command.extend(('--trusted-host', host))
         return exe_command
 
     def _configure_proxy(self):

@@ -106,8 +106,7 @@ class TestCaseServiceCommon(TestCasePlaybookCommon):
         """Handle on subscribe callback after subscription completes"""
 
         with self.lock:
-            event = self.subscriptions.pop(mid)
-            if event:
+            if event := self.subscriptions.pop(mid):
                 event.set()
 
     def publish(self, message: str, topic: Optional[str] = None):

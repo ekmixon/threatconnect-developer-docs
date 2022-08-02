@@ -38,7 +38,7 @@ class Address(Indicator):
         If the ip address has been provided returns that the address can be created, otherwise
         returns that the address cannot be created.
         """
-        return not self.data.get('ip') is None
+        return self.data.get('ip') is not None
 
     # TODO: @burdy - is this correct for address?
     def dns_resolution(self):

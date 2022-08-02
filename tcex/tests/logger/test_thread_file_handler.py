@@ -19,7 +19,7 @@ class TestApiHandler:
             name='pytest', filename=logfile, level='trace', path=tcex.default_args.tc_log_path
         )
 
-        for _ in range(0, 20):
+        for _ in range(20):
             tcex.log.trace('THREAD TRACE LOGGING')
             tcex.log.debug('THREAD DEBUG LOGGING')
             tcex.log.info('THREAD INFO LOGGING')

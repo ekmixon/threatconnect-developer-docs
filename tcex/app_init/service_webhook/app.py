@@ -43,20 +43,18 @@ class App(ServiceApp):
             #              callback will be set to response.
             # * True - Playbook will be launched.
             # * Else - Playbook will NOT be launched.
-            response = True
+            return True
         elif self.tcex.ij.has_feature('WebhookServiceEndpoint'):
             # * Dict - Playbook will be launched and provided data
             #          will be used in the response to the client.
             # * Else - Response will be set to default of statusCode=200, body=None, and headers=[].
-            response = None
+            return None
         else:
             # * Dict - Playbook will not be launched and provided data
             #          will be used in the response to the client.
             # * True - Playbook will be launched.
             # * Else - Playbook will NOT be launched.
-            response = True
-
-        return response
+            return True
 
     # pylint: disable=no-self-use,unused-argument
     def webhook_marshall_event_callback(

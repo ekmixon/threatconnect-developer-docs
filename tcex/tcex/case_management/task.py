@@ -113,26 +113,26 @@ class Task(CommonCaseManagement):
             }
         ]
 
-        self._artifacts = kwargs.get('artifact', None)
-        self._assignee = kwargs.get('assignee', None)
-        self._case_id = kwargs.get('case_id', None)
-        self._case_xid = kwargs.get('case_xid', None)
-        self._completed_by = kwargs.get('completed_by', None)
-        self._completed_date = kwargs.get('completed_date', None)
-        self._config_playbook = kwargs.get('config_playbook', None)
-        self._config_task = kwargs.get('config_task', None)
-        self._dependent_on_id = kwargs.get('dependent_on_id', None)
-        self._description = kwargs.get('description', None)
-        self._due_date = kwargs.get('due_date', None)
-        self._duration = kwargs.get('duration', None)
-        self._name = kwargs.get('name', None)
-        self._notes = kwargs.get('notes', None)
-        self._parent_case = kwargs.get('parent_case', None)
-        self._required = kwargs.get('required', None)
-        self._status = kwargs.get('status', None)
-        self._workflow_phase = kwargs.get('workflow_phase', None)
-        self._workflow_step = kwargs.get('workflow_step', None)
-        self._xid = kwargs.get('xid', None)
+        self._artifacts = kwargs.get('artifact')
+        self._assignee = kwargs.get('assignee')
+        self._case_id = kwargs.get('case_id')
+        self._case_xid = kwargs.get('case_xid')
+        self._completed_by = kwargs.get('completed_by')
+        self._completed_date = kwargs.get('completed_date')
+        self._config_playbook = kwargs.get('config_playbook')
+        self._config_task = kwargs.get('config_task')
+        self._dependent_on_id = kwargs.get('dependent_on_id')
+        self._description = kwargs.get('description')
+        self._due_date = kwargs.get('due_date')
+        self._duration = kwargs.get('duration')
+        self._name = kwargs.get('name')
+        self._notes = kwargs.get('notes')
+        self._parent_case = kwargs.get('parent_case')
+        self._required = kwargs.get('required')
+        self._status = kwargs.get('status')
+        self._workflow_phase = kwargs.get('workflow_phase')
+        self._workflow_step = kwargs.get('workflow_step')
+        self._xid = kwargs.get('xid')
 
     def add_artifact(self, **kwargs):
         """Add a artifact to the task"""
@@ -356,11 +356,7 @@ class ConfigTasks:
     @property
     def as_dict(self):
         """Return a dict representation of the ConfigTask class."""
-        data = []
-        for task in self.config_tasks:
-            data.append(task.as_dict)
-
-        return data
+        return [task.as_dict for task in self.config_tasks]
 
     @property
     def body(self):
@@ -374,13 +370,13 @@ class ConfigTask:
     def __init__(self, **kwargs):
         """Config Task object for Tasks."""
         self._transform_kwargs(kwargs)
-        self._artifact_type = kwargs.get('artifact_type', None)
-        self._data_type = kwargs.get('data_type', None)
-        self._intel_type = kwargs.get('intel_type', None)
-        self._name = kwargs.get('name', None)
-        self._required = kwargs.get('required', None)
-        self._ui_element = kwargs.get('ui_element', None)
-        self._ui_label = kwargs.get('ui_label', None)
+        self._artifact_type = kwargs.get('artifact_type')
+        self._data_type = kwargs.get('data_type')
+        self._intel_type = kwargs.get('intel_type')
+        self._name = kwargs.get('name')
+        self._required = kwargs.get('required')
+        self._ui_element = kwargs.get('ui_element')
+        self._ui_label = kwargs.get('ui_label')
 
     @property
     def as_dict(self):
@@ -393,10 +389,7 @@ class ConfigTask:
                 continue
             as_dict[key] = value
 
-        if not as_dict:
-            return None
-
-        return as_dict
+        return as_dict or None
 
     @property
     def artifact_type(self):

@@ -128,9 +128,10 @@ class Permutations:
             table_name (str): The name of the table.
             columns (list): List of columns to add to the DB.
         """
-        formatted_columns = ''
-        for col in set(columns):
-            formatted_columns += f""""{col.strip('"').strip("'")}" text, """
+        formatted_columns = ''.join(
+            f""""{col.strip('"').strip("'")}" text, """ for col in set(columns)
+        )
+
         formatted_columns = formatted_columns.strip(', ')
 
         create_table_sql = f'CREATE TABLE IF NOT EXISTS {table_name} ({formatted_columns});'
@@ -252,9 +253,11 @@ class Permutations:
     def input_names(self):
         """Return all input permutation names for current App."""
         if self._input_names is None and self.lj.has_layout:
-            self._input_names = []
-            for permutation in self.input_permutations:
-                self._input_names.append([p.get('name') for p in permutation])
+            self._input_names = [
+                [p.get('name') for p in permutation]
+                for permutation in self.input_permutations
+            ]
+
         return self._input_names
 
     @property
@@ -393,9 +396,10 @@ class Permutations:
 
     def write_permutations_file(self):
         """Print all valid permutations."""
-        permutations = []
-        for index, p in enumerate(self.input_permutations):
-            permutations.append({'index': index, 'args': p})
+        permutations = [
+            {'index': index, 'args': p}
+            for index, p in enumerate(self.input_permutations)
+        ]
 
         with open(self.filename, 'w') as fh:
             json.dump(permutations, fh, indent=2, sort_keys=True)

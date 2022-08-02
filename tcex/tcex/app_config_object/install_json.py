@@ -55,10 +55,7 @@ class InstallJson:
     @staticmethod
     def _to_bool(value):
         """Convert string value to bool."""
-        bool_value = False
-        if str(value).lower() in ['1', 'true']:
-            bool_value = True
-        return bool_value
+        return str(value).lower() in {'1', 'true'}
 
     @property
     def app_output_var_type(self):
@@ -101,10 +98,10 @@ class InstallJson:
             output_variables (dict): A dict of the output variables
             job_id (int): A job id to use in output variable string.
         """
-        variables = []
-        for p in output_variables:
-            variables.append(self.create_variable(p.get('name'), p.get('type'), job_id))
-        return variables
+        return [
+            self.create_variable(p.get('name'), p.get('type'), job_id)
+            for p in output_variables
+        ]
 
     def create_variable(self, var_name, var_type, job_id=1234):
         """Create output variables.
@@ -184,29 +181,29 @@ class InstallJson:
         params = {}
         for p in self.params:
 
-            if name is not None:
-                if p.get('name') != name:
-                    continue
+            if name is not None and p.get('name') != name:
+                continue
 
-            if hidden is not None:
-                if p.get('hidden', False) is not hidden:
-                    continue
+            if hidden is not None and p.get('hidden', False) is not hidden:
+                continue
 
-            if required is not None:
-                if p.get('required', False) is not required:
-                    continue
+            if required is not None and p.get('required', False) is not required:
+                continue
 
-            if service_config is not None:
-                if p.get('serviceConfig', False) is not service_config:
-                    continue
+            if (
+                service_config is not None
+                and p.get('serviceConfig', False) is not service_config
+            ):
+                continue
 
-            if _type is not None:
-                if p.get('type') != _type:
-                    continue
+            if _type is not None and p.get('type') != _type:
+                continue
 
-            if input_permutations is not None:
-                if p.get('name') not in input_permutations:
-                    continue
+            if (
+                input_permutations is not None
+                and p.get('name') not in input_permutations
+            ):
+                continue
 
             params.setdefault(p.get('name'), p)
         return params
@@ -279,12 +276,8 @@ class InstallJson:
                 args[n] = p.get('validValues', [])
             elif p.get('type').lower() == 'keyvaluelist':
                 args[n] = '<KeyValueArray>'
-            elif n in ['api_access_id', 'api_secret_key']:
-                # leave these parameters set to the value defined in defaults
-                pass
-            else:
-                types = '|'.join(p.get('playbookDataType', []))
-                if types:
+            elif n not in ['api_access_id', 'api_secret_key']:
+                if types := '|'.join(p.get('playbookDataType', [])):
                     args[n] = p.get('default', f'<{types}>')
                 else:
                     args[n] = p.get('default', '')
@@ -461,10 +454,8 @@ class InstallJson:
     @staticmethod
     def update_sequence_numbers(json_data: dict) -> None:
         """Update program main on App type."""
-        sequence_number = 1
-        for param in json_data.get('params', []):
+        for sequence_number, param in enumerate(json_data.get('params', []), start=1):
             param['sequence'] = sequence_number
-            sequence_number += 1
 
     @staticmethod
     def update_valid_values(json_data: dict) -> None:
@@ -476,10 +467,9 @@ class InstallJson:
                 if '${KEYCHAIN}' not in param.get('validValues', []):
                     param['validValues'] = param.get('validValues') or []
                     param['validValues'].append('${KEYCHAIN}')
-            else:
-                if '${TEXT}' not in (param.get('validValues') or []):
-                    param['validValues'] = param.get('validValues') or []
-                    param['validValues'].append('${TEXT}')
+            elif '${TEXT}' not in (param.get('validValues') or []):
+                param['validValues'] = param.get('validValues') or []
+                param['validValues'].append('${TEXT}')
 
     @staticmethod
     def update_playbook_data_types(json_data: dict) -> None:

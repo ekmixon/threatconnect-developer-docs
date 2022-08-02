@@ -45,8 +45,7 @@ class ApiService(CommonService):
         """
         query_string = []
         try:
-            for q in params:
-                query_string.append(f'''{q.get('name')}={q.get('value')}''')
+            query_string.extend(f'''{q.get('name')}={q.get('value')}''' for q in params)
         except AttributeError as e:
             self.log.error(
                 f'feature=api-service, event=bad-params-provided, params={params}, error="""{e})"""'
@@ -89,8 +88,7 @@ class ApiService(CommonService):
         """
         headers_ = []
         try:
-            for h in headers:
-                headers_.append({'name': h[0], 'value': h[1]})
+            headers_.extend({'name': h[0], 'value': h[1]} for h in headers)
         except AttributeError as e:
             self.log.error(
                 f'feature=api-service, event=bad-headers-provided, '

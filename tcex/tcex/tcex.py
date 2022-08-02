@@ -99,7 +99,7 @@ class TcEx:
         self.log.error(
             f'App interrupted - file: {call_file}, method: {call_module}, line: {call_line}.'
         )
-        if signal_interupt in (2, 15):
+        if signal_interupt in {2, 15}:
             self.exit(1, 'The App received an interrupt signal and will now exit.')
 
     def advanced_request(
@@ -254,9 +254,7 @@ class TcEx:
 
         if code is None:
             code = self.exit_code
-        elif code in [0, 1, 3]:
-            pass
-        else:
+        elif code not in [0, 1, 3]:
             self.log.error('Invalid exit code')
             code = 1
 
@@ -287,7 +285,7 @@ class TcEx:
         Args:
             code (int): The exit code value for the app.
         """
-        if code is not None and code in [0, 1, 3]:
+        if code is not None and code in {0, 1, 3}:
             self._exit_code = code
         else:
             self.log.warning('Invalid exit code')
@@ -302,30 +300,22 @@ class TcEx:
         Returns:
             (list): a list of indicators split on " : ".
         """
-        if indicator.count(' : ') > 0:
-            # handle all multi-valued indicators types (file hashes and custom indicators)
-            indicator_list = []
-
-            # group 1 - lazy capture everything to first <space>:<space> or end of line
-            iregx_pattern = r'^(.*?(?=\s\:\s|$))?'
-            iregx_pattern += r'(?:\s\:\s)?'  # remove <space>:<space>
-            # group 2 - look behind for <space>:<space>, lazy capture everything
-            #           to look ahead (optional <space>):<space> or end of line
-            iregx_pattern += r'((?<=\s\:\s).*?(?=(?:\s)?\:\s|$))?'
-            iregx_pattern += r'(?:(?:\s)?\:\s)?'  # remove (optional <space>):<space>
-            # group 3 - look behind for <space>:<space>, lazy capture everything
-            #           to look ahead end of line
-            iregx_pattern += r'((?<=\s\:\s).*?(?=$))?$'
-            iregx = re.compile(iregx_pattern)
-
-            indicators = iregx.search(indicator)
-            if indicators is not None:
-                indicator_list = list(indicators.groups())
-        else:
+        if ' : ' not in indicator:
             # handle all single valued indicator types (address, host, etc)
-            indicator_list = [indicator]
+            return [indicator]
 
-        return indicator_list
+        iregx_pattern = r'^(.*?(?=\s\:\s|$))?' + r'(?:\s\:\s)?'
+        # group 2 - look behind for <space>:<space>, lazy capture everything
+        #           to look ahead (optional <space>):<space> or end of line
+        iregx_pattern += r'((?<=\s\:\s).*?(?=(?:\s)?\:\s|$))?'
+        iregx_pattern += r'(?:(?:\s)?\:\s)?'  # remove (optional <space>):<space>
+        # group 3 - look behind for <space>:<space>, lazy capture everything
+        #           to look ahead end of line
+        iregx_pattern += r'((?<=\s\:\s).*?(?=$))?$'
+        iregx = re.compile(iregx_pattern)
+
+        indicators = iregx.search(indicator)
+        return list(indicators.groups()) if indicators is not None else []
 
     @property
     def group_types(self) -> list:
@@ -377,10 +367,14 @@ class TcEx:
         """
         merged = self.group_types_data.copy()
         merged.update(self.indicator_types_data)
-        for key, value in merged.items():
-            if value.get('apiEntity') == api_entity:
-                return key
-        return None
+        return next(
+            (
+                key
+                for key, value in merged.items()
+                if value.get('apiEntity') == api_entity
+            ),
+            None,
+        )
 
     def handle_error(
         self, code: int, message_values: Optional[list] = None, raise_error: Optional[bool] = True
@@ -541,7 +535,7 @@ class TcEx:
             max_length: The maximum length of an exit message. Defaults to 255.
         """
         if not isinstance(message, str):
-            message = str(message)
+            message = message
 
         if os.access(self.default_args.tc_out_path, os.W_OK):
             message_file = os.path.join(self.default_args.tc_out_path, 'message.tc')
@@ -777,10 +771,7 @@ class TcEx:
         Returns:
             (str): The truncated group name with optional ellipsis.
         """
-        ellipsis_value = ''
-        if ellipsis:
-            ellipsis_value = ' ...'
-
+        ellipsis_value = ' ...' if ellipsis else ''
         if group_name is not None and len(group_name) > group_max_length:
             # split name by spaces and reset group_name
             group_name_array = group_name.split(' ')

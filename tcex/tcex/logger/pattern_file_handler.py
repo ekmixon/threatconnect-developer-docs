@@ -87,6 +87,9 @@ class PatternFileHandler(logging.FileHandler):
         """
         # handler_key and thread_key are added in logger.add_thread_file_handler() method
         # pylint: disable=no-member
-        if hasattr(threading.current_thread(), self.thread_key):
-            if self.handler_key == getattr(threading.current_thread(), self.thread_key):
-                logging.FileHandler.emit(self, record)
+        if hasattr(
+            threading.current_thread(), self.thread_key
+        ) and self.handler_key == getattr(
+            threading.current_thread(), self.thread_key
+        ):
+            logging.FileHandler.emit(self, record)

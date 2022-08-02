@@ -52,9 +52,7 @@ class Bin:
     @staticmethod
     def print_message(message, line_bright=False, line_color=None, line_limit=150):
         """Print the message ensuring lines don't exceed line limit."""
-        bright = ''
-        if line_bright:
-            bright = c.Style.BRIGHT
+        bright = c.Style.BRIGHT if line_bright else ''
         message_line = ''
         for word in message.split(' '):
             if len(message_line) + len(word) < line_limit:

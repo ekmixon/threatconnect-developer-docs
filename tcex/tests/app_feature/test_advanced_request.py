@@ -19,13 +19,12 @@ class TestAdvancedRequest:
             tcex (object): The TcEx object.
             context (str): The KV store context.
         """
-        data = {}
-        for k, v in tcex.redis_client.hgetall(context).items():
-            if k.decode() == '#App:0001:pytest.request.headers!String':
-                data[k.decode()] = json.loads(json.loads(v.decode()))
-            else:
-                data[k.decode()] = json.loads(v.decode())
-        return data
+        return {
+            k.decode(): json.loads(json.loads(v.decode()))
+            if k.decode() == '#App:0001:pytest.request.headers!String'
+            else json.loads(v.decode())
+            for k, v in tcex.redis_client.hgetall(context).items()
+        }
 
     def setup_class(self):
         """Configure setup before all tests."""

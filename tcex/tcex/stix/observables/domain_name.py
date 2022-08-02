@@ -45,7 +45,7 @@ class StixDomainNameObject(StixModel):
             'confidence': '@.confidence',
             'attributes': [{'type': 'External ID', 'value': '@.id'}],
         }
-        parse_map.update(self.default_map)
+        parse_map |= self.default_map
 
         yield from self._map(
             stix_data, parse_map,

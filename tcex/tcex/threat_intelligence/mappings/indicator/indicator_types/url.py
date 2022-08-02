@@ -34,7 +34,7 @@ class URL(Indicator):
         If the text has been provided returns that the URL can be created, otherwise
         returns that the URL cannot be created.
         """
-        return not self.data.get('text') is None
+        return self.data.get('text') is not None
 
     def _set_unique_id(self, json_response):
         """Set the unique_id provided a json response.

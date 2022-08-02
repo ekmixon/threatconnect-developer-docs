@@ -60,47 +60,48 @@ class TemplateBase:
 
     def print_results(self, results: list) -> None:
         """Print the results."""
-        if results:
-            # get the max length of url
-            destination_length = 0
-            destination_max = 50
-            url_length = 0
-            for r in results:
-                if len(r.get('destination')) > destination_length:
-                    destination_length = min(len(r.get('destination')) + 5, destination_max)
-                if len(r.get('url')) > url_length:
-                    url_length = len(r.get('url')) + 5
+        if not results:
+            return
+        # get the max length of url
+        destination_length = 0
+        destination_max = 50
+        url_length = 0
+        for r in results:
+            if len(r.get('destination')) > destination_length:
+                destination_length = min(len(r.get('destination')) + 5, destination_max)
+            if len(r.get('url')) > url_length:
+                url_length = len(r.get('url')) + 5
 
-            # TODO: fix this - overriding url_length temporarily
-            url_length = 120
-            destination_length = 50
+        # TODO: fix this - overriding url_length temporarily
+        url_length = 120
+        destination_length = 50
 
-            # title row
-            print(
-                f"{c.Style.BRIGHT}{c.Fore.CYAN}{'Download URL:'!s:<{url_length}}"
-                f"{'Destination:'!s:<{destination_length}}"
-                f"{'Status:'!s:<10}"
+        # title row
+        print(
+            f"{c.Style.BRIGHT}{c.Fore.CYAN}{'Download URL:'!s:<{url_length}}"
+            f"{'Destination:'!s:<{destination_length}}"
+            f"{'Status:'!s:<10}"
+        )
+        for r in results:
+            destination = self._short_string(
+                r.get('destination'), length=(destination_length - 5)
             )
-            for r in results:
-                destination = self._short_string(
-                    r.get('destination'), length=(destination_length - 5)
-                )
-                status = r.get('status')
-                url = r.get('url')
+            status = r.get('status')
+            url = r.get('url')
 
-                # get status color
-                status_color = f'{c.Style.BRIGHT}{c.Fore.RED}'
-                if status == 'Success':
-                    status_color = c.Fore.GREEN
-                elif status == 'Skipped':
-                    status_color = f'{c.Style.BRIGHT}{c.Fore.YELLOW}'
+            # get status color
+            status_color = f'{c.Style.BRIGHT}{c.Fore.RED}'
+            if status == 'Success':
+                status_color = c.Fore.GREEN
+            elif status == 'Skipped':
+                status_color = f'{c.Style.BRIGHT}{c.Fore.YELLOW}'
 
-                # data row
-                print(
-                    f'{url!s:<{url_length}}'
-                    f'{destination!s:<{destination_length}}'
-                    f'{status_color}{status!s:<10}'
-                )
+            # data row
+            print(
+                f'{url!s:<{url_length}}'
+                f'{destination!s:<{destination_length}}'
+                f'{status_color}{status!s:<10}'
+            )
 
     def print_download_results(self) -> None:
         """Print the download results."""
@@ -439,9 +440,11 @@ class ValidationTemplates(TemplateBase):
 
         variable format: #App:9876:http.content!Binary
         """
-        output_data = []
-        for ov in output_variables:
-            output_data.append({'method': self.utils.variable_method_name(ov), 'variable': ov})
+        output_data = [
+            {'method': self.utils.variable_method_name(ov), 'variable': ov}
+            for ov in output_variables
+        ]
+
         return sorted(output_data, key=lambda i: i['method'])
 
     def validate_py(self):

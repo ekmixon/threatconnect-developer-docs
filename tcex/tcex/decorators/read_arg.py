@@ -257,7 +257,7 @@ class ReadArg:
             # check arg_data against fail_on_values
             if enabled:
                 try:
-                    list([v(arg_data, self.arg, label) for v in self.validators])
+                    [v(arg_data, self.arg, label) for v in self.validators]
                 except ValidationError as v:
                     value_formatted = (
                         f'"{arg_data}"' if isinstance(arg_data, str) else str(arg_data)
@@ -275,13 +275,15 @@ class ReadArg:
 
             # Add logging for debug/troubleshooting
             arg_type = app.tcex.playbook.variable_type(getattr(app.args, self.arg))
-            if arg_type not in ['Binary', 'BinaryArray'] and app.tcex.log.getEffectiveLevel() <= 10:
-                # only log variable data to prevent logging keychain data
-                if app.tcex.playbook.is_variable(arg):
-                    log_string = str(arg_data)
-                    if len(log_string) > 100:  # pragma: no cover
-                        log_string = f'{log_string[:100]} ...'
-                    app.tcex.log.debug(f'input value: {log_string}')
+            if (
+                arg_type not in ['Binary', 'BinaryArray']
+                and app.tcex.log.getEffectiveLevel() <= 10
+                and app.tcex.playbook.is_variable(arg)
+            ):
+                log_string = str(arg_data)
+                if len(log_string) > 100:  # pragma: no cover
+                    log_string = f'{log_string[:100]} ...'
+                app.tcex.log.debug(f'input value: {log_string}')
 
             return wrapped(*args, **kwargs)
 

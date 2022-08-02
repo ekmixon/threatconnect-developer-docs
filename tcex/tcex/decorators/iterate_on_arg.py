@@ -193,7 +193,7 @@ class IterateOnArg:
                 # check ad against fail_on_values
                 if enabled:
                     try:
-                        list([v(ad, self.arg, label) for v in self.validators])
+                        [v(ad, self.arg, label) for v in self.validators]
                     except ValidationError as v:
                         value_formatted = f'"{ad}"' if isinstance(ad, str) else str(ad)
                         message = (

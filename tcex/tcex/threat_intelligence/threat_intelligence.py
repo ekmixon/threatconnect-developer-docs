@@ -392,7 +392,7 @@ class ThreatIntelligence:
 
         data = {'status_code': r.status_code}
         if r.ok:
-            data.update(r.json().get('data', {}))
+            data |= r.json().get('data', {})
             data['main_type'] = ti.type
             data['sub_type'] = ti.api_sub_type
             data['api_type'] = ti.api_sub_type
@@ -408,7 +408,7 @@ class ThreatIntelligence:
             r = ti.add_attribute(attribute.get('type'), attribute.get('value'))
             attribute_data = {'status_code': r.status_code}
             if r.ok:
-                attribute_data.update(r.json().get('attribute', {}))
+                attribute_data |= r.json().get('attribute', {})
             data['attributes'].append(attribute_data)
         for tag in tags:
             r = ti.add_tag(tag)
@@ -429,7 +429,7 @@ class ThreatIntelligence:
             r = ti.add_association(association_target)
             association_response = {'status_code': r.status_code}
             if r.ok:
-                association_response.update(r.json().get('association', {}))
+                association_response |= r.json().get('association', {})
             data['associations'].append(association_response)
 
         return data
@@ -441,10 +441,7 @@ class ThreatIntelligence:
             entities: The entity to create.
             owner: The owner of the entity (
         """
-        responses = []
-        for entity in entities:
-            responses.append(self.create_entity(entity, owner))
-        return responses
+        return [self.create_entity(entity, owner) for entity in entities]
 
     def entities(self, tc_data, resource_type):
         """Yield an entity.
@@ -615,11 +612,7 @@ class ThreatIntelligence:
                     if content_response.ok:
                         entity['fileContent'] = content_response.text
             # get the entity type
-            if d.get('type') is not None:
-                entity['type'] = d.get('type')
-            else:
-                entity['type'] = resource_type
-
+            entity['type'] = d.get('type') if d.get('type') is not None else resource_type
             yield entity
 
     def _gen_indicator_class(self):

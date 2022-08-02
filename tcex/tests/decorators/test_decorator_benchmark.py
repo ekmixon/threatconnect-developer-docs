@@ -24,6 +24,5 @@ class TestBenchmarkDecorators:
         # test method with decorator
         try:
             self.benchmark()
-            assert True, 'No exception indicates that the decorator passed'
         except Exception:
             assert False, 'Any exception indicates that the decorator failed'

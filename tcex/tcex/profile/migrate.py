@@ -223,9 +223,8 @@ class Migrate:
             for k, v in config.items():
                 input_data = self.profile.ij.params_dict.get(k)
                 input_type = 'optional'
-                if input_data is not None:
-                    if input_data.get('required') is True:
-                        input_type = 'required'
+                if input_data is not None and input_data.get('required') is True:
+                    input_type = 'required'
 
                 # add value back with appropriate input type
                 config_inputs[input_type][k] = v
@@ -335,12 +334,9 @@ class Migrate:
 
         # check if profile is using old list type
         if isinstance(stage_tc, list):
-            profile_data['stage']['threatconnect'] = {}
-
-            counter = 0
-            for item in stage_tc:
-                profile_data['stage']['threatconnect'][f'item_{counter}'] = item
-                counter += 1
+            profile_data['stage']['threatconnect'] = {
+                f'item_{counter}': item for counter, item in enumerate(stage_tc)
+            }
 
     @staticmethod
     def variable_pattern_env_v1(profile_data: dict) -> dict:

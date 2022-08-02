@@ -116,11 +116,7 @@ class CommonCaseManagement:
                 meta.append(required_text)
             if read_only:
                 meta.append('Read-Only')
-            if meta:
-                meta = f" [{','.join(meta)}]"
-            else:
-                meta = ''
-
+            meta = f" [{','.join(meta)}]" if meta else ''
             # build docstring
             docstring += (
                 f'{" " * 8}{self.tcex.utils.camel_to_snake(p)} ({type_}, kwargs):'
@@ -207,10 +203,7 @@ class CommonCaseManagement:
             as_dict[key] = value
 
         # don't return empty dicts
-        if not as_dict:
-            return None
-
-        return as_dict
+        return as_dict or None
 
     @property
     def body(self):
@@ -246,10 +239,7 @@ class CommonCaseManagement:
             built_body[key] = value
 
         # don't return empty dicts
-        if not built_body:
-            return None
-
-        return self._reverse_transform(built_body)
+        return self._reverse_transform(built_body) if built_body else None
 
     @property
     def available_fields(self):
@@ -403,9 +393,8 @@ class CommonCaseManagement:
             # get read-only value for display and required value
             updatable = pd.get('updatable', True)
             read_only = pd.get('read-only', False)
-            if not read_only:
-                if updatable:
-                    put_properties.append(p)
+            if not read_only and updatable:
+                put_properties.append(p)
 
         return put_properties
 
@@ -437,11 +426,7 @@ class CommonCaseManagement:
     @property
     def required_properties(self):
         """Return a list of required fields for current object."""
-        rp = []
-        for p, pd in self.properties.items():
-            if pd.get('required'):
-                rp.append(p)
-        return rp
+        return [p for p, pd in self.properties.items() if pd.get('required')]
 
     def submit(self):
         """Create or Update the Case Management object.

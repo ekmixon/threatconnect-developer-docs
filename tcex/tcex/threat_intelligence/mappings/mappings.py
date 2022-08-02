@@ -66,9 +66,7 @@ class Mappings:
             if value is None:
                 continue
             as_dict[key] = value
-        if not as_dict:
-            return None
-        return as_dict
+        return as_dict or None
 
     @property
     def type(self):

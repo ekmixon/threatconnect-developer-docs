@@ -319,10 +319,11 @@ class TestCase(TestCaseManagement):
         time.sleep(1)
 
         # specifically match the count of the cases created.
-        case_count = 0
-        for case in self.cm.cases():
-            if case.name.startswith(request.node.name):
-                case_count += 1
+        case_count = sum(
+            1
+            for case in self.cm.cases()
+            if case.name.startswith(request.node.name)
+        )
 
         # run assertions on case count
         assert case_count == 2
@@ -370,10 +371,7 @@ class TestCase(TestCaseManagement):
         cases = self.cm.cases()
         cases.filter.date_added(TQL.Operator.GT, (datetime.now() - timedelta(days=2)).isoformat())
 
-        found = False
-        for case in cases:
-            if case.name == request.node.name:
-                found = True
+        found = any(case.name == request.node.name for case in cases)
         assert found, 'No cases returned for TQL'
 
     def test_case_get_by_tql_filter_description(self, request):

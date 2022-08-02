@@ -31,10 +31,7 @@ class TestIterateOnArgDecorators:
         if ret_val == '_array_length':
             return _array_length
 
-        if ret_val == '_index':
-            return _index
-
-        return None
+        return _index if ret_val == '_index' else None
 
     @pytest.mark.parametrize(
         'arg,value,variable_type',

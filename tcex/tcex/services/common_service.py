@@ -63,10 +63,9 @@ class CommonService:
         # create trigger id logging filehandler
         self.logger.add_pattern_file_handler(
             name=self.thread_name,
-            filename=f'''{datetime.today().strftime('%Y%m%d')}/{self.session_id}.log''',
+            filename=f'''{datetime.now().strftime('%Y%m%d')}/{self.session_id}.log''',
             level=self.args.tc_log_level,
             path=self.args.tc_log_path,
-            # uuid4 pattern for session_id
             pattern=r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}.log$',
             handler_key=self.session_id,
             thread_key='session_id',
@@ -331,21 +330,22 @@ class CommonService:
     @ready.setter
     def ready(self, bool_val: bool):
         """Set ready boolean."""
-        if isinstance(bool_val, bool) and bool_val is True:
-            # wait until connected to send ready command
-            while not self.message_broker._connected:
-                if self.message_broker.shutdown:
-                    break
-                time.sleep(1)
-            else:  # pylint: disable=useless-else-on-loop
-                self.log.info('feature=service, event=service-ready')
-                ready_command = {'command': 'Ready'}
-                if self.ij.runtime_level.lower() in ['apiservice']:
-                    ready_command['discoveryTypes'] = self.ij.service_discovery_types
-                self.message_broker.publish(
-                    json.dumps(ready_command), self.args.tc_svc_client_topic
-                )
-                self._ready = True
+        if not isinstance(bool_val, bool) or not bool_val:
+            return
+        # wait until connected to send ready command
+        while not self.message_broker._connected:
+            if self.message_broker.shutdown:
+                break
+            time.sleep(1)
+        else:  # pylint: disable=useless-else-on-loop
+            self.log.info('feature=service, event=service-ready')
+            ready_command = {'command': 'Ready'}
+            if self.ij.runtime_level.lower() in ['apiservice']:
+                ready_command['discoveryTypes'] = self.ij.service_discovery_types
+            self.message_broker.publish(
+                json.dumps(ready_command), self.args.tc_svc_client_topic
+            )
+            self._ready = True
 
     def service_thread(
         self,

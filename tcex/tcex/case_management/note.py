@@ -95,22 +95,22 @@ class Note(CommonCaseManagement):
         """Initialize class properties."""
         super().__init__(tcex, ApiEndpoints.NOTES, kwargs)
 
-        self._artifact = kwargs.get('artifact', None)
-        self._artifact_id = kwargs.get('artifact_id', None)
-        self._author = kwargs.get('author', None)
-        self._case_id = kwargs.get('case_id', None)
-        self._case_xid = kwargs.get('case_xid', None)
+        self._artifact = kwargs.get('artifact')
+        self._artifact_id = kwargs.get('artifact_id')
+        self._author = kwargs.get('author')
+        self._case_id = kwargs.get('case_id')
+        self._case_xid = kwargs.get('case_xid')
         self._date_added = kwargs.get('date_added')
-        self._edited = kwargs.get('edited', None)
-        self._last_modified = kwargs.get('last_modified', None)
-        self._parent_case = kwargs.get('parent_case', None)
-        self._summary = kwargs.get('summary', None)
-        self._task = kwargs.get('task', None)
-        self._task_id = kwargs.get('task_id', None)
-        self._task_xid = kwargs.get('task_xid', None)
-        self._text = kwargs.get('text', None)
-        self._workflow_event = kwargs.get('workflow_event', None)
-        self._workflow_event_id = kwargs.get('workflow_event_id', None)
+        self._edited = kwargs.get('edited')
+        self._last_modified = kwargs.get('last_modified')
+        self._parent_case = kwargs.get('parent_case')
+        self._summary = kwargs.get('summary')
+        self._task = kwargs.get('task')
+        self._task_id = kwargs.get('task_id')
+        self._task_xid = kwargs.get('task_xid')
+        self._text = kwargs.get('text')
+        self._workflow_event = kwargs.get('workflow_event')
+        self._workflow_event_id = kwargs.get('workflow_event_id')
 
     @property
     def artifact(self):
@@ -198,9 +198,7 @@ class Note(CommonCaseManagement):
     @property
     def task(self):
         """Return the **Task** for the Note."""
-        if self._task:
-            return self.tcex.cm.task(**self._task)
-        return self._task
+        return self.tcex.cm.task(**self._task) if self._task else self._task
 
     @property
     def task_id(self):

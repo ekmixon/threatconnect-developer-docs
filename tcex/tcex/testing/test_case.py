@@ -86,7 +86,7 @@ class TestCase:
     @staticmethod
     def _to_bool(value):
         """Return bool value from int or string."""
-        return str(value).lower() in ['1', 'true']
+        return str(value).lower() in {'1', 'true'}
 
     def _update_args(self, args: dict) -> dict:
         """Update args before running App.
@@ -159,7 +159,7 @@ class TestCase:
 
         # service Apps will get their args/params from encrypted file in the "in" directory
         data = json.dumps(config, sort_keys=True).encode('utf-8')
-        key = ''.join(random.choice(string.ascii_lowercase) for i in range(16))
+        key = ''.join(random.choice(string.ascii_lowercase) for _ in range(16))
         encrypted_data = self.utils.encrypt_aes_cbc(key, data)
 
         # ensure that the in directory exists
@@ -236,11 +236,7 @@ class TestCase:
             options=options,
         )
 
-        # Override test environments if specified
-        os_environments = None
-        if pytestconfig:
-            os_environments = pytestconfig.option.environment
-
+        os_environments = pytestconfig.option.environment if pytestconfig else None
         # check profile environment
         self.check_environment(self._profile.environments, os_environments)
 

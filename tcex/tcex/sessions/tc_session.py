@@ -119,7 +119,7 @@ class TcSession(Session):
             and self.token.token_expires is not None
         )
 
-    def request(self, method, url, **kwargs):  # pylint: disable=arguments-differ
+    def request(self, method, url, **kwargs):    # pylint: disable=arguments-differ
         """Override request method disabling verify on token renewal if disabled on session."""
         if self.auth is None:
             self._configure_auth()
@@ -130,17 +130,15 @@ class TcSession(Session):
         response = super().request(method, url, **kwargs)
 
         # don't show curl message for logging commands
-        if '/v2/logs/app' not in url:
-            # APP-79 - adding logging of request as curl commands
-            if not response.ok or self.log_curl:
-                try:
-                    self.log.debug(
-                        self.utils.requests_to_curl(
-                            response.request, proxies=self.proxies, verify=self.verify
-                        )
+        if '/v2/logs/app' not in url and (not response.ok or self.log_curl):
+            try:
+                self.log.debug(
+                    self.utils.requests_to_curl(
+                        response.request, proxies=self.proxies, verify=self.verify
                     )
-                except Exception:  # nosec
-                    pass  # logging curl command is best effort
+                )
+            except Exception:  # nosec
+                pass  # logging curl command is best effort
 
         self.log.debug(
             f'feature=tc-session, request-url={response.request.url}, '
